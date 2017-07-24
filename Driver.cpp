@@ -1,6 +1,6 @@
 #include <iostream>
 #include "Driver.h"
-#include "Lex_Parse/Parser.h"
+#include "Lex_Parse/Parser.hh"
 
 #define YY_DECL yy::Parser::symbol_type yylex (RSWCOMP::Driver& driver)
 

@@ -15,9 +15,6 @@ namespace RSWCOMP {
             _content->out << ".globl main" << std::endl << std::endl << "main:" << std::endl;
 
         }
-        else {
-
-        }
         return MetaCoder::_content;
     }
 
