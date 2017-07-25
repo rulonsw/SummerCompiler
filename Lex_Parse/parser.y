@@ -17,6 +17,8 @@
 {
 #include <iostream>
 #include <string>
+#include "../its_complicated/components/Expression.h"
+#include "../its_complicated/MetaCoder.h"
 class Driver;
 }
 
@@ -27,7 +29,7 @@ class Driver;
 %initial-action
 {
   // Initialize the initial location.
-  @$.begin.filename = @$.end.filename = &driver.file;
+  @$.begin.filename = @$.end.filename = &driver.sourceFile;
 };
 
 %define parse.trace
@@ -35,7 +37,7 @@ class Driver;
 
 %code
 {
-#include "main.hpp"
+#include "Driver.h"
 }
 
 
@@ -141,8 +143,8 @@ class Driver;
 %type <int> ThenPart
 %type <int> ToHead
 %type <int> Type
-%type <std::shared_ptr<RSWCOMP::exp>> WhileHead
-%type <std::shared_ptr<RSWCOMP::exp>> WhileStatement
+%type <std::shared_ptr<RSWCOMP::Expression>> WhileHead
+%type <std::shared_ptr<RSWCOMP::Expression>> WhileStatement
 %type <int> WriteArgs
 %type <int> WriteStatement
 %type <std::string> idString
@@ -366,7 +368,7 @@ Expression : CHARCONSTSY                         {$$ = RSWCOMP::CharExpr($1);}
            | NOTSY Expression                    {$$ = RSWCOMP::NotExpr($2);}
            | ORDSY LPARENSY Expression RPARENSY  {$$ = RSWCOMP::OrdExpr($3);}
            | PREDSY LPARENSY Expression RPARENSY {$$ = RSWCOMP::PredExpr($3);}
-           | STRINGSY                            {$$ = RSWCOMP::StrExpr($1);delete($1);}
+           | STRINGSY                            {/*$$ = RSWCOMP::StrExpr($1);delete($1);*/}
            | SUCCSY LPARENSY Expression RPARENSY {$$ = RSWCOMP::SuccExpr($3);}
            ;
 
@@ -375,7 +377,7 @@ FunctionCall : IDENTSY LPARENSY OptArguments RPARENSY {}
 
 LValue : LValue DOTSY IDENTSY {}
        | LValue LBRACKETSY Expression RBRACKETSY {}
-       | IDENTSY {$$ = RSWCOMP::LoadId($1);}
+       | IDENTSY {/*$$ = RSWCOMP::LoadId($1);*/}
        ;
 %%
 

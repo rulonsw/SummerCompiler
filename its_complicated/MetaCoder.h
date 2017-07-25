@@ -17,6 +17,7 @@ namespace RSWCOMP {
     void ConstBlock();
     void WriteId(std::string id);
     void WriteVars(Type t);
+    void Stop();
     Type LookupType(std::string tName);
     void WriteConsts();
     std::shared_ptr<LValue> LVFromID(std::string id);

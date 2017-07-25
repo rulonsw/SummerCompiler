@@ -6,7 +6,11 @@
 #define SUMMERCOMPILER_DRIVER_H
 #include<map>
 #include<string>
+#include "parser.hpp"
 
+
+#define YY_DECL yy::Parser::symbol_type yylex (Driver& driver)
+YY_DECL;
 // This is the actual driver of the compiler. This will control input flow, among other things.
 // Things that are included here:
 //   - References to the file being opened
@@ -14,7 +18,6 @@
 //   - Result value
 //   - Name of the file to be opened
 //   - Map of variables within scope
-namespace RSWCOMP {
     class Driver {
     public:
         //Con/Destructors
@@ -36,6 +39,6 @@ namespace RSWCOMP {
 
 
     };
-}
+
 
 #endif //SUMMERCOMPILER_DRIVER_H

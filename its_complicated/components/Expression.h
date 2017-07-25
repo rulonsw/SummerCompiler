@@ -19,8 +19,8 @@ namespace RSWCOMP {
     class Expression {
     private:
         ExprDataType exprType;
-        std::shared_ptr<Register> regLocation = nullptr;
-        Type containsDataType;
+        std::shared_ptr<RSWCOMP::Register> regLocation = nullptr;
+        RSWCOMP::Type containsDataType;
         int numericValue = 42;
         std::string strValue = "DEFAULT_UNSET";
 

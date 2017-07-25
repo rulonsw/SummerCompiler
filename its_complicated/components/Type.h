@@ -5,10 +5,10 @@
 #include <cstdint>
 #include <string>
 
-#ifndef SUMMERCOMPILER_TYPE_H
-#define SUMMERCOMPILER_TYPE_H
+#ifndef TYPE_H
+#define TYPE_H
 
-#endif //SUMMERCOMPILER_TYPE_H
+
 namespace RSWCOMP {
     class Type {
     public:
@@ -45,3 +45,4 @@ namespace RSWCOMP {
         }
     };
 }
+#endif //SUMMERCOMPILER_TYPE_H

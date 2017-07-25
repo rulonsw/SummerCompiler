@@ -40,7 +40,7 @@ set(CMAKE_INSTALL_RPATH ".")
 add_library(interpreter STATIC ${code_src})
 
 set(SOURCE_FILES Driver.cpp Driver.h) # This is where main lives, and essentially, the driver of the program
-add_executable(CS5300 ${SOURCE_FILES})
+add_executable(cpslc ${SOURCE_FILES})
 
 target_link_libraries(interpreter ${FLEX_LIBRARIES} ${BISON_LIBRARIES} ${Boost_LIBRARIES})
-target_link_libraries(CS5300 interpreter)
+target_link_libraries(cpslc interpreter)
