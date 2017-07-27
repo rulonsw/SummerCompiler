@@ -12,7 +12,7 @@ namespace RSWCOMP {
     enum regDataType {ID, STRING, CHAR, INT};
 
     struct Pool {
-        static std::vector<std::string> available;
+        std::vector<std::string> available;
         Pool() {
             available = {"$s0", "$s1", "$s2", "$s3", "$s4", "$s5", "$s6", "$s7",
                          "$t0", "$t1", "$t2", "$t3", "$t4", "$t5", "$t6", "$t7", "$t8", "$t9"};
@@ -20,18 +20,17 @@ namespace RSWCOMP {
     };
     class Register {
     private:
-        Pool rp;
-        std::string regName;
+        static Pool rp;
 
     public:
+        std::string regName;
         Register(std::string n)
                 :regName(n){};
 
         ~Register(){
             rp.available.push_back(this->regName);
         };
-        std::shared_ptr<Register> consumeRegister(std::string n);
-        void releaseRegister();
+        static std::shared_ptr<Register> consumeRegister();
 
     };
 

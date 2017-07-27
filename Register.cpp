@@ -6,9 +6,11 @@
 
 namespace RSWCOMP {
 
-    std::shared_ptr<Register> Register::consumeRegister(std::string n) {
-        auto consumedRegister = this->rp.available.back;
+    std::shared_ptr<Register> Register::consumeRegister() {
+        std::string consumedRegister;
+        consumedRegister = rp.available.back();
+
         rp.available.pop_back();
-        return std::make_shared(Register(consumedRegister));
+        return std::make_shared<Register>(Register(consumedRegister));
     }
 }

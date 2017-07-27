@@ -18,6 +18,7 @@ namespace RSWCOMP {
     };
 
     class IntType: public Type {
+    public:
         IntType() {
             memBlkSize = 4;
             typeName = "Integer";
@@ -25,6 +26,7 @@ namespace RSWCOMP {
     };
 
     class BooleanType: public Type {
+    public:
         BooleanType() {
             memBlkSize = 4;
             typeName = "Boolean";
@@ -32,6 +34,7 @@ namespace RSWCOMP {
     };
 
     class CharType: public Type {
+    public:
         CharType() {
             memBlkSize = 4;
             typeName = "Character";
@@ -39,6 +42,7 @@ namespace RSWCOMP {
     };
 
     class StringType: public Type {
+    public:
         StringType() {
             memBlkSize = -1;
             typeName = "String";

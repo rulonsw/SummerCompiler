@@ -9,6 +9,7 @@
 #include <string>
 #include <unordered_map>
 #include <fstream>
+#include <its_complicated/components/Expression.h>
 #include "its_complicated/components/LValue.h"
 
 namespace RSWCOMP {
@@ -18,6 +19,8 @@ namespace RSWCOMP {
     void WriteId(std::string id);
     void WriteVars(Type t);
     void Stop();
+    const std::shared_ptr<Expression> CharExpr(char c);
+    std::shared_ptr<Expression> ChrExpr(int c);
     Type LookupType(std::string tName);
     void WriteConsts();
     std::shared_ptr<LValue> LVFromID(std::string id);

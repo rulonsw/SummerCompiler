@@ -38,4 +38,10 @@ int main(int argc, char* argv[]) {
                              "Sample:\n\n>>cpslc -o out_file_name cpsl_file_name" << std::endl;
         return -1;
     }
+    try {
+
+    }catch(std::string e){
+        std::cout << "Compilation error encountered of type: " << e << std::endl;
+        return 1;
+    }
 }

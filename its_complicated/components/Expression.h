@@ -25,12 +25,19 @@ namespace RSWCOMP {
         std::string strValue = "DEFAULT_UNSET";
 
     public:
+        void intToChar();
+        void charToInt();
+
+        std::shared_ptr<Register> getRegister();
+        Type containedDataType() {
+            return containsDataType;
+        }
 
         Expression(std::shared_ptr<Register> reg, Type type) {
             containsDataType = type;
             regLocation = reg;
             exprType = memoryLocation;
-            numericValue = -2147483648;
+            numericValue = INT32_MIN;
 
         }
 
@@ -41,7 +48,7 @@ namespace RSWCOMP {
         }
 
         Expression(std::string str, Type t) {
-            numericValue = -2147483648;
+            numericValue = INT32_MIN;
             strValue = str;
             exprType = strHolder;
             containsDataType = t;
