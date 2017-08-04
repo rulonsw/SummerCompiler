@@ -51,8 +51,8 @@ namespace RSWCOMP {
     }
 
     void ReadValue(std::shared_ptr<LValue> lv) {
-        auto curr = MetaCoder::curr();
         if (lv->lvi == DATA || lv->lvi == CONST) throw "Can't read into constant memory locations.";
+        auto curr = MetaCoder::curr();
 
         int MIPSReadType = 0;
 
@@ -64,6 +64,29 @@ namespace RSWCOMP {
         else if (lv->lvi == STACK_REF) destMemLoc = lv->stackOffset + "($sp)";
 
         curr->out << "\tli $v0, " << MIPSReadType << "\n\tsyscall\n\tsw $v0," << destMemLoc << std::endl;
+    }
+
+    void WriteExpr(std::shared_ptr<Expression> exp) {
+        auto curr = MetaCoder::curr();
+        switch(exp->containedDataType().memBlkSize) {
+            case 4:
+                if(exp->containedDataType().typeName == "Integer" || exp->containedDataType().typeName == "Boolean") {
+                    curr->out << "\tli $v0, 1\n\tli $a0, " << exp->getRegister()->regName << "\n\tsyscall\n";
+                }
+                else {
+                    curr->out << "\tli $v0, 11\n\tli $a0, " << exp->getRegister()->regName << "\n\tsyscall\n";
+                }
+                break;
+            case -1: //This means it's a string. Ain't no way it'll be nothin' else
+//                curr->out << "\tli $v0, 4\n\tla $a0, ";
+                /*TODO: first, we need .asciiz labels for every string the user enters. Then, we can finish this part. */
+                break;
+            default:
+                throw "Something horrible has happened. Your expression holds a non-standard data type, and is thus unprintable.";
+
+        }
+
+
     }
 
     std::shared_ptr<MetaCoder> MetaCoder::_content = nullptr;

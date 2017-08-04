@@ -17,13 +17,20 @@ namespace RSWCOMP {
     void MainBlock();
     void ConstBlock();
     void WriteId(std::string id);
+
     const std::shared_ptr<Expression> CharExpr(char c);
     const std::shared_ptr<Expression> ChrExpr(std::shared_ptr<Expression> expr);
+
     const std::shared_ptr<Expression> AndExpr(std::shared_ptr<Expression> e1, std::shared_ptr<Expression> e2);
     const std::shared_ptr<Expression> OrExpr(std::shared_ptr<Expression> e1, std::shared_ptr<Expression> e2);
+
     void WriteVars(Type t);
+
     void ReadValue(std::shared_ptr<LValue> lv);
+    void WriteExpr(std::shared_ptr<Expression> exp);
+
     void Assign(std::shared_ptr<LValue> lv, std::shared_ptr<Expression> exp);
+
     void Stop();
 
     Type LookupType(std::string tName);
