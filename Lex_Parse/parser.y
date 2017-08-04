@@ -18,6 +18,7 @@
 #include <iostream>
 #include <string>
 #include "../its_complicated/components/Expression.h"
+#include "../its_complicated/components/LValue.h"
 #include "../its_complicated/MetaCoder.h"
 class Driver;
 }
@@ -112,7 +113,7 @@ class Driver;
 %type <int> ElseClause
 %type <int> ElseIfHead
 %type <int> ElseIfList
-%type <int> Expression
+%type <std::shared_ptr<RSWCOMP::Expression>> Expression
 %type <int> FSignature
 %type <int> FieldDecl
 %type <int> FieldDecls
@@ -126,7 +127,7 @@ class Driver;
 %type <int> OptVar
 %type <int> IfHead
 %type <int> IfStatement
-%type <int> LValue
+%type <std::shared_ptr<RSWCOMP::LValue>> LValue
 %type <int> OptArguments
 %type <int> OptFormalParameters
 %type <int> PSignature
@@ -273,7 +274,7 @@ Statement : Assignment {$$ = $1;}
           | {$$ = -1;}
           ;
 
-Assignment : LValue ASSIGNSY Expression {$$ = RSWCOMP::Assign($1,$3);}
+Assignment : LValue ASSIGNSY Expression {RSWCOMP::Assign($1,$3);}
            ;
 
 IfStatement : IfHead ThenPart ElseIfList ElseClause ENDSY {}
@@ -325,8 +326,8 @@ ReturnStatement : RETURNSY Expression {}
 ReadStatement : READSY LPARENSY ReadArgs RPARENSY {$$ = $3;}
               ;
 
-ReadArgs : ReadArgs COMMASY LValue {$$ = RSWCOMP::ReadValue($1,$3);}
-         | LValue                  {$$ = RSWCOMP::ReadValue($1);}
+ReadArgs : ReadArgs COMMASY LValue {RSWCOMP::ReadValue($3);}
+         | LValue                  {RSWCOMP::ReadValue($1);}
          ;
 
 WriteStatement : WRITESY LPARENSY WriteArgs RPARENSY {$$ = $3;}

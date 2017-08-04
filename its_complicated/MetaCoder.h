@@ -18,6 +18,8 @@ namespace RSWCOMP {
     void ConstBlock();
     void WriteId(std::string id);
     void WriteVars(Type t);
+    void ReadValue(std::shared_ptr<LValue> lv);
+    void Assign(std::shared_ptr<LValue> lv, std::shared_ptr<Expression> exp);
     void Stop();
     const std::shared_ptr<Expression> CharExpr(char c);
     std::shared_ptr<Expression> ChrExpr(int c);

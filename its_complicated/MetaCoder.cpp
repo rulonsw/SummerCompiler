@@ -35,6 +35,7 @@ namespace RSWCOMP {
         return std::make_shared<Expression>(result_register, e1->containedDataType());
     }
 
+
     void Assign(std::shared_ptr<LValue> lv, std::shared_ptr<Expression> exp) {
         if (lv->lvi != GLOBAL_REF && lv->lvi != STACK_REF) throw "Constants and Data Entries (i.e., string identifiers) Cannot Be Overwritten.";
         if (exp->containedDataType().typeName == "String" || exp->containedDataType().typeName == "") throw "Expression is either a string or null. This is unacceptable.";
@@ -47,6 +48,22 @@ namespace RSWCOMP {
 
         curr->out << "\tsw " << exp->getRegister()->regName << "," << destMemLoc << "# This is the storage location of " << lv->name << std::endl;
 
+    }
+
+    void ReadValue(std::shared_ptr<LValue> lv) {
+        auto curr = MetaCoder::curr();
+        if (lv->lvi == DATA || lv->lvi == CONST) throw "Can't read into constant memory locations.";
+
+        int MIPSReadType = 0;
+
+        if (lv->type.typeName == "Integer") MIPSReadType = 5;
+        else if (lv->type.typeName == "Character") MIPSReadType = 12;
+
+        std::string destMemLoc = "";
+        if (lv->lvi == GLOBAL_REF) destMemLoc = lv->globalOffset + "($gp)";
+        else if (lv->lvi == STACK_REF) destMemLoc = lv->stackOffset + "($sp)";
+
+        curr->out << "\tli $v0, " << MIPSReadType << "\n\tsyscall\n\tsw $v0," << destMemLoc << std::endl;
     }
 
     std::shared_ptr<MetaCoder> MetaCoder::_content = nullptr;
