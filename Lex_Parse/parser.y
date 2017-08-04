@@ -314,7 +314,7 @@ ToHead : TOSY Expression {}
        | DOWNTOSY Expression {}
        ;
 
-StopStatement : STOPSY {$$ = RSWCOMP::Stop();}
+StopStatement : STOPSY {RSWCOMP::Stop();}
               ;
 
 ReturnStatement : RETURNSY Expression {}

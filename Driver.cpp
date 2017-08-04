@@ -4,17 +4,19 @@
 
 
 
-namespace RSWCOMP {
 
     Driver::Driver()
             : trace(false) {
-
     }
 
     int Driver::parse(const std::string& src) {
+
         sourceFile = src;
         begin_scan();
-
+        yy::Parser parser = (*this);
+        int p_result = parser.parse();
+        end_scan();
+        return p_result;
     }
 
     void Driver::begin_scan() {
@@ -24,7 +26,6 @@ namespace RSWCOMP {
     void Driver::end_scan() {
 
     }
-}
 
 int main(int argc, char* argv[]) {
     //Usage of program:
@@ -41,7 +42,7 @@ int main(int argc, char* argv[]) {
     try {
 
     }catch(std::string e){
-        std::cout << "Compilation error encountered of type: " << e << std::endl;
+        std::cout << "Compilation error encountered. Error type: " << e << std::endl;
         return 1;
     }
 }

@@ -5,6 +5,7 @@
 #include <iostream>
 #include "Expression.h"
 #include "../MetaCoder.h"
+#include "../../Register.h"
 
 namespace RSWCOMP {
 
