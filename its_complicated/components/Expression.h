@@ -28,6 +28,8 @@ namespace RSWCOMP {
         void intToChar();
         void charToInt();
 
+        std::string getStrVal() {return strValue;}
+
         std::shared_ptr<Register> getRegister();
         Type containedDataType() {
             return containsDataType;

@@ -62,7 +62,7 @@ class Driver;
 %token FUNCTIONSY 
 %token GTESY 
 %token GTSY 
-%token IDENTSY
+%token <std::string> IDENTSY
 %token IFSY 
 %token INTSY 
 %token LBRACKETSY 
@@ -165,7 +165,7 @@ ConstDecls : ConstDecls ConstDecl
 					 | ConstDecl
 					 ;
 
-ConstDecl : IDENTSY EQSY Expression SCOLONSY {}
+ConstDecl : IDENTSY EQSY Expression SCOLONSY {RSWCOMP::declareConst($1, $3);}
 					;
 
 PFDecls : PFDecls ProcedureDecl
@@ -333,8 +333,8 @@ ReadArgs : ReadArgs COMMASY LValue {RSWCOMP::ReadValue($3);}
 WriteStatement : WRITESY LPARENSY WriteArgs RPARENSY {$$ = $3;}
                ;
 
-WriteArgs : WriteArgs COMMASY Expression {$$ = RSWCOMP::WriteExpr($1,$3);}
-          | Expression                   {$$ = RSWCOMP::WriteExpr($1);}
+WriteArgs : WriteArgs COMMASY Expression {RSWCOMP::WriteExpr($3);}
+          | Expression                   {RSWCOMP::WriteExpr($1);}
           ;
 
 ProcedureCall : IDENTSY LPARENSY OptArguments RPARENSY {}

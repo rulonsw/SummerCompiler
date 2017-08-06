@@ -5,6 +5,45 @@
 #include "MetaCoder.h"
 namespace RSWCOMP {
 
+    std::shared_ptr<LValue> LVFromID(std::string yo) {
+        auto curr = MetaCoder::curr();
+        auto findResult = find(curr->LVs.begin(), curr->LVs.end(), yo);
+        if (findResult == curr->LVs.end()) {
+            throw "LValue with id " + yo + " not found.";
+        }
+        return findResult->second;
+    }
+
+    std::shared_ptr<Expression> ExprFromLV(std::shared_ptr<LValue> lv) {
+        auto curr = MetaCoder::curr();
+
+        auto result = find(curr->LVs.begin(), curr->LVs.end(), lv->name);
+        if(result == curr->LVs.end()) throw "LValue " + lv->name + " not found in current MetaCoder map.";
+
+        auto tempLV = result->second;
+
+        Expression expr;
+        switch (tempLV->lvi) {
+            case GLOBAL_REF:
+                expr = Expression(Register::consumeRegister(), tempLV->type);
+                curr->out << "\tlw " << expr.getRegister()->regName <<", " << tempLV->globalOffset << "($gp)" << std::endl;
+                return std::make_shared<Expression>(expr);
+            case STACK_REF:
+                expr = Expression(Register::consumeRegister(), tempLV->type);
+                curr->out << "\tlw " << expr.getRegister()->regName <<", " << tempLV->stackOffset << "($sp)" << std::endl;
+                return std::make_shared<Expression>(expr);
+            case DATA:
+                expr = Expression(Register::consumeRegister(), tempLV->type);
+                curr->out << "\tla " << expr.getRegister()->regName <<", " << tempLV->name << std::endl;
+                return std::make_shared<Expression>(expr);
+            case CONST:
+                expr = Expression(tempLV->constVal, tempLV->type);
+                return std::make_shared<Expression>(expr);
+            default:
+                throw "Unknown LV type present in tempLV. LVI code " + tempLV->lvi ;
+        }
+    }
+
     void Stop() {
         auto coder = MetaCoder::curr();
         coder->out << "li $v0, 10" << std::endl;
@@ -49,6 +88,37 @@ namespace RSWCOMP {
         curr->out << "\tsw " << exp->getRegister()->regName << "," << destMemLoc << "# This is the storage location of " << lv->name << std::endl;
 
     }
+    std::string StringToAsciizData(std::shared_ptr<Expression> exp) {
+        if (exp->containedDataType().typeName != "String") {
+            throw "attempted to label non-string data type. Type: " + exp->containedDataType().typeName;
+        }
+        auto curr = MetaCoder::curr();
+        std::string stringLabel = "stringLabel" + curr->nextStringCtr();
+        return stringLabel;
+    }
+
+    void declareConst(std::string id, std::shared_ptr<Expression> exp) {
+        auto curr = MetaCoder::curr();
+        if (find(curr->existingIds.begin(), curr->existingIds.end(), id) != curr->existingIds.end()) {
+            throw "data with existing id " + id + " is already being used.";
+        }
+        LValue newLV;
+        newLV.name = id;
+        newLV.type = exp->containedDataType();
+
+        if (exp->containedDataType().typeName == "String") {
+            newLV.lvi = DATA;
+            newLV.name = id;
+            curr->constExprs[id] = exp;
+
+        }
+        else {
+            newLV.lvi = GLOBAL_REF;
+            newLV.globalOffset = curr->topOfGlobal();
+            curr->out << "\tsw " << exp->getRegister()->regName << ", " << newLV.globalOffset <<"($gp) #id: "<< id << std::endl;
+        }
+        curr->LVs[id] = std::make_shared<LValue>(newLV);
+    }
 
     void ReadValue(std::shared_ptr<LValue> lv) {
         if (lv->lvi == DATA || lv->lvi == CONST) throw "Can't read into constant memory locations.";
@@ -78,8 +148,13 @@ namespace RSWCOMP {
                 }
                 break;
             case -1: //This means it's a string. Ain't no way it'll be nothin' else
-//                curr->out << "\tli $v0, 4\n\tla $a0, ";
-                /*TODO: first, we need .asciiz labels for every string the user enters. Then, we can finish this part. */
+                std::string searchFor = StringToAsciizData(exp);
+                declareConst(searchFor,std::make_shared<Expression>(exp->getStrVal()));
+
+                std::shared_ptr<LValue> lvTemp = LVFromID(searchFor);
+                auto expRet = ExprFromLV(lvTemp);
+
+                curr->out << "\tli $v0, 4\n\tla $a0, " << expRet->getRegister()->regName << "\n\tsyscall\n";
                 break;
             default:
                 throw "Something horrible has happened. Your expression holds a non-standard data type, and is thus unprintable.";

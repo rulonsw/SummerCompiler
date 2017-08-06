@@ -10,6 +10,7 @@
 #include <unordered_map>
 #include <fstream>
 #include <its_complicated/components/Expression.h>
+#include <vector>
 #include "its_complicated/components/LValue.h"
 
 namespace RSWCOMP {
@@ -26,6 +27,9 @@ namespace RSWCOMP {
 
     void WriteVars(Type t);
 
+    void declareConst(std::string id, std::shared_ptr<Expression> exp);
+    std::string StringToAsciizData(std::shared_ptr<Expression> exp);
+
     void ReadValue(std::shared_ptr<LValue> lv);
     void WriteExpr(std::shared_ptr<Expression> exp);
 
@@ -35,6 +39,8 @@ namespace RSWCOMP {
 
     Type LookupType(std::string tName);
     void WriteConsts();
+
+    std::shared_ptr<Expression> ExprFromLV(std::shared_ptr<LValue> lv);
     std::shared_ptr<LValue> LVFromID(std::string id);
 
 
@@ -43,14 +49,32 @@ namespace RSWCOMP {
         static std::string _outputFileName;
         int globalOffset =  0;
         int stackOffset = 0;
-
-
+        int stringCounter = 0;
 
 
     public:
+        int topOfGlobal() {
+            int i = globalOffset;
+            globalOffset += 4;
+            return i;
+        }
+        int topOfGlobal(int i){
+            //Number of discrete variables involved in user-defined class held in arglist
+            int j = globalOffset;
+            globalOffset += (4 * i);
+            return j;
+        }
         static std::shared_ptr<MetaCoder> curr();
+        static std::vector<std::string> existingIds;
         std::unordered_map<std::string, std::shared_ptr<LValue>> LVs;
+        std::unordered_map<std::string, std::shared_ptr<Expression>> constExprs;
         std::ofstream out;
+        int nextStringCtr() {
+            int ret = stringCounter;
+            stringCounter++;
+
+            return ret;
+        }
 
     };
 
