@@ -43,6 +43,23 @@ namespace RSWCOMP {
     std::shared_ptr<Expression> ExprFromLV(std::shared_ptr<LValue> lv);
     std::shared_ptr<LValue> LVFromID(std::string id);
 
+    /*****MATH SECTION*****/
+
+    void AddExpr(std::shared_ptr<Expression>e1, std::shared_ptr<Expression>e2);
+    void SubExpr(std::shared_ptr<Expression>e1, std::shared_ptr<Expression>e2);
+
+    void MultExpr(std::shared_ptr<Expression>e1, std::shared_ptr<Expression>e2);
+    void DivExpr(std::shared_ptr<Expression>e1, std::shared_ptr<Expression>e2);
+
+    void EqExpr(std::shared_ptr<Expression>e1, std::shared_ptr<Expression>e2);
+    void NeqExpr(std::shared_ptr<Expression>e1, std::shared_ptr<Expression>e2);
+
+    void GteExpr(std::shared_ptr<Expression>e1, std::shared_ptr<Expression>e2);
+    void GtExpr(std::shared_ptr<Expression>e1, std::shared_ptr<Expression>e2);
+
+    void LteExpr(std::shared_ptr<Expression>e1, std::shared_ptr<Expression>e2);
+    void LtExpr(std::shared_ptr<Expression>e1, std::shared_ptr<Expression>e2);
+
 
     class MetaCoder {
         static std::shared_ptr<MetaCoder> _content;

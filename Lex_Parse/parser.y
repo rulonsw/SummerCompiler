@@ -361,9 +361,9 @@ Expression : CHARCONSTSY                         {$$ = RSWCOMP::CharExpr($1);}
            | Expression NEQSY Expression         {$$ = RSWCOMP::NeqExpr($1,$3);}
            | Expression ORSY Expression          {$$ = RSWCOMP::OrExpr($1,$3);}
            | Expression PLUSSY Expression        {$$ = RSWCOMP::AddExpr($1,$3);}
-           | FunctionCall                        {$$ = $1;}
+           | FunctionCall                        {}
            | INTSY                               {$$ = RSWCOMP::IntExpr($1);}
-           | LPARENSY Expression RPARENSY        {$$ = $2;}
+           | LPARENSY Expression RPARENSY        {}
            | LValue                              {$$ = RSWCOMP::LoadExpr($1);}
            | MINUSSY Expression %prec UMINUSSY   {$$ = RSWCOMP::UnMinusExpr($2);}
            | NOTSY Expression                    {$$ = RSWCOMP::NotExpr($2);}

@@ -5,6 +5,7 @@
 #include "MetaCoder.h"
 namespace RSWCOMP {
 
+/*****LVALUE METHODS*****/
     std::shared_ptr<LValue> LVFromID(std::string yo) {
         auto curr = MetaCoder::curr();
         auto findResult = find(curr->LVs.begin(), curr->LVs.end(), yo);
@@ -40,16 +41,18 @@ namespace RSWCOMP {
                 expr = Expression(tempLV->constVal, tempLV->type);
                 return std::make_shared<Expression>(expr);
             default:
-                throw "Unknown LV type present in tempLV. LVI code " + tempLV->lvi ;
+                throw "Unknown LV type present in tempLV." ;
         }
     }
 
+/*****BASIC CONTROL FLOW*****/
     void Stop() {
         auto coder = MetaCoder::curr();
         coder->out << "li $v0, 10" << std::endl;
         coder->out << "syscall" << std::endl;
     }
 
+/*****CASTING VARIABLES*****/
     const std::shared_ptr<Expression> CharExpr(char c) {
         return std::make_shared<Expression>((int)c, CharType());
     }
@@ -58,6 +61,8 @@ namespace RSWCOMP {
         expr->intToChar();
         return expr;
     }
+
+/*****BOOLEAN OPERATIONS*****/
     const std::shared_ptr<Expression> AndExpr(std::shared_ptr<Expression> e1, std::shared_ptr<Expression> e2) {
         auto curr = MetaCoder::curr();
         auto result_register = Register::consumeRegister();
@@ -73,8 +78,10 @@ namespace RSWCOMP {
 
         return std::make_shared<Expression>(result_register, e1->containedDataType());
     }
+/*****MATH OPERATIONS*****/
 
 
+/*****DATA OPERATIONS*****/
     void Assign(std::shared_ptr<LValue> lv, std::shared_ptr<Expression> exp) {
         if (lv->lvi != GLOBAL_REF && lv->lvi != STACK_REF) throw "Constants and Data Entries (i.e., string identifiers) Cannot Be Overwritten.";
         if (exp->containedDataType().typeName == "String" || exp->containedDataType().typeName == "") throw "Expression is either a string or null. This is unacceptable.";
@@ -86,15 +93,6 @@ namespace RSWCOMP {
         else destMemLoc = std::to_string(lv->stackOffset) + "($sp)";
 
         curr->out << "\tsw " << exp->getRegister()->regName << "," << destMemLoc << "# This is the storage location of " << lv->name << std::endl;
-
-    }
-    std::string StringToAsciizData(std::shared_ptr<Expression> exp) {
-        if (exp->containedDataType().typeName != "String") {
-            throw "attempted to label non-string data type. Type: " + exp->containedDataType().typeName;
-        }
-        auto curr = MetaCoder::curr();
-        std::string stringLabel = "stringLabel" + curr->nextStringCtr();
-        return stringLabel;
     }
 
     void declareConst(std::string id, std::shared_ptr<Expression> exp) {
@@ -158,10 +156,16 @@ namespace RSWCOMP {
                 break;
             default:
                 throw "Something horrible has happened. Your expression holds a non-standard data type, and is thus unprintable.";
-
         }
-
-
+    }
+/*****STRING HELPERS*****/
+    std::string StringToAsciizData(std::shared_ptr<Expression> exp) {
+        if (exp->containedDataType().typeName != "String") {
+            throw "attempted to label non-string data type. Type: " + exp->containedDataType().typeName;
+        }
+        auto curr = MetaCoder::curr();
+        std::string stringLabel = "stringLabel" + curr->nextStringCtr();
+        return stringLabel;
     }
 
     std::shared_ptr<MetaCoder> MetaCoder::_content = nullptr;
