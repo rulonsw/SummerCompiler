@@ -66,7 +66,7 @@ namespace RSWCOMP {
     const std::shared_ptr<Expression> AndExpr(std::shared_ptr<Expression> e1, std::shared_ptr<Expression> e2) {
         auto curr = MetaCoder::curr();
         auto result_register = Register::consumeRegister();
-        curr->out << "\tand " << result_register->regName << ", " << e1->getRegister() << "," << e2->getRegister() << std::endl;
+        curr->out << "\tand " << result_register->regName << ", " << e1->getRegister()->regName << "," << e2->getRegister()->regName << std::endl;
 
         return std::make_shared<Expression>(result_register, e1->containedDataType());
     }
@@ -74,11 +74,98 @@ namespace RSWCOMP {
     const std::shared_ptr<Expression> OrExpr(std::shared_ptr<Expression> e1, std::shared_ptr<Expression> e2) {
         auto curr = MetaCoder::curr();
         auto result_register = Register::consumeRegister();
-        curr->out << "\tor " << result_register->regName << ", " << e1->getRegister() << "," << e2->getRegister() << std::endl;
+        curr->out << "\tor " << result_register->regName << ", " << e1->getRegister()->regName << "," << e2->getRegister()->regName << std::endl;
 
         return std::make_shared<Expression>(result_register, e1->containedDataType());
     }
 /*****MATH OPERATIONS*****/
+    const std::shared_ptr<Expression> AddExpr(std::shared_ptr<Expression> e1, std::shared_ptr<Expression> e2) {
+        auto curr = MetaCoder::curr();
+        auto result_register = Register::consumeRegister();
+        curr->out <<"\tadd " << result_register->regName << ", " << e1->getRegister() << "," << e2->getRegister()->regName << std::endl;
+
+        return std::make_shared<Expression>(result_register, e1->containedDataType());
+    }
+    const std::shared_ptr<Expression> SubExpr(std::shared_ptr<Expression> e1, std::shared_ptr<Expression> e2) {
+        auto curr = MetaCoder::curr();
+        auto result_register = Register::consumeRegister();
+        curr->out <<"\tsub " << result_register->regName << ", " << e1->getRegister()->regName << "," << e2->getRegister() << std::endl;
+
+        return std::make_shared<Expression>(result_register, e1->containedDataType());
+    }
+
+    const std::shared_ptr<Expression> MultExpr(std::shared_ptr<Expression> e1, std::shared_ptr<Expression> e2) {
+        auto curr = MetaCoder::curr();
+        auto result_register = Register::consumeRegister();
+        curr->out <<"\tmul " <<result_register->regName << "," << e1->getRegister() << "," << e2->getRegister() << std::endl;
+
+        return std::make_shared<Expression>(result_register, e1->containedDataType());
+    }
+    const std::shared_ptr<Expression> DivExpr(std::shared_ptr<Expression> e1, std::shared_ptr<Expression> e2) {
+        auto curr = MetaCoder::curr();
+        auto result_register = Register::consumeRegister();
+        curr->out <<"\tdiv " <<result_register->regName << "," << e1->getRegister() << "," << e2->getRegister() << std::endl;
+
+        return std::make_shared<Expression>(result_register, e1->containedDataType());
+    }
+    const std::shared_ptr<Expression> ModExpr(std::shared_ptr<Expression> e1, std::shared_ptr<Expression> e2) {
+        auto curr = MetaCoder::curr();
+        auto result_register = Register::consumeRegister();
+
+        curr->out << "\tdiv " << e1->getRegister()->regName << "," << e2->getRegister()-> regName << "\n\tmfhi " << result_register->regName << std::endl;
+
+        return std::make_shared<Expression>(result_register, e1->containedDataType());
+    }
+
+    const std::shared_ptr<Expression> EqExpr(std::shared_ptr<Expression> e1, std::shared_ptr<Expression> e2) {
+        auto curr = MetaCoder::curr();
+        auto result_register = Register::consumeRegister();
+
+        curr->out << "\tseq " << result_register->regName << "," << e1->getRegister()->regName << "," << e2->getRegister()->regName << std::endl;
+
+        return std::make_shared<Expression>(result_register, e1->containedDataType());
+    }
+    const std::shared_ptr<Expression> NeqExpr(std::shared_ptr<Expression> e1, std::shared_ptr<Expression> e2) {
+        auto curr = MetaCoder::curr();
+        auto result_register = Register::consumeRegister();
+
+        curr->out << "\tsne " << result_register->regName << "," << e1->getRegister()->regName << "," << e2->getRegister()->regName << std::endl;
+
+        return std::make_shared<Expression>(result_register, e1->containedDataType());
+    }
+
+    const std::shared_ptr<Expression> GteExpr(std::shared_ptr<Expression> e1, std::shared_ptr<Expression> e2) {
+        auto curr = MetaCoder::curr();
+        auto result_register = Register::consumeRegister();
+
+        curr->out << "\tsge " << result_register->regName << "," << e1->getRegister()->regName << "," << e2->getRegister()->regName << std::endl;
+
+        return std::make_shared<Expression>(result_register, e1->containedDataType());
+    }
+    const std::shared_ptr<Expression> GtExpr(std::shared_ptr<Expression> e1, std::shared_ptr<Expression> e2) {
+        auto curr = MetaCoder::curr();
+        auto result_register = Register::consumeRegister();
+
+        curr->out << "\tsgt " << result_register->regName << "," << e1->getRegister()->regName << "," << e2->getRegister()->regName << std::endl;
+
+        return std::make_shared<Expression>(result_register, e1->containedDataType());
+    }
+    const std::shared_ptr<Expression> LteExpr(std::shared_ptr<Expression> e1, std::shared_ptr<Expression> e2) {
+        auto curr = MetaCoder::curr();
+        auto result_register = Register::consumeRegister();
+
+        curr->out << "\tsle " << result_register->regName << "," << e1->getRegister()->regName << "," << e2->getRegister()->regName << std::endl;
+
+        return std::make_shared<Expression>(result_register, e1->containedDataType());
+    }
+    const std::shared_ptr<Expression> LtExpr(std::shared_ptr<Expression> e1, std::shared_ptr<Expression> e2) {
+        auto curr = MetaCoder::curr();
+        auto result_register = Register::consumeRegister();
+
+        curr->out << "\tslt " << result_register->regName << "," << e1->getRegister()->regName << "," << e2->getRegister()->regName << std::endl;
+
+        return std::make_shared<Expression>(result_register, e1->containedDataType());
+    }
 
 
 /*****DATA OPERATIONS*****/

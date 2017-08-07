@@ -45,20 +45,21 @@ namespace RSWCOMP {
 
     /*****MATH SECTION*****/
 
-    void AddExpr(std::shared_ptr<Expression>e1, std::shared_ptr<Expression>e2);
-    void SubExpr(std::shared_ptr<Expression>e1, std::shared_ptr<Expression>e2);
+    const std::shared_ptr<Expression> AddExpr(std::shared_ptr<Expression>e1, std::shared_ptr<Expression>e2);
+    const std::shared_ptr<Expression> SubExpr(std::shared_ptr<Expression>e1, std::shared_ptr<Expression>e2);
 
-    void MultExpr(std::shared_ptr<Expression>e1, std::shared_ptr<Expression>e2);
-    void DivExpr(std::shared_ptr<Expression>e1, std::shared_ptr<Expression>e2);
+    const std::shared_ptr<Expression> MultExpr(std::shared_ptr<Expression>e1, std::shared_ptr<Expression>e2);
+    const std::shared_ptr<Expression> DivExpr(std::shared_ptr<Expression>e1, std::shared_ptr<Expression>e2);
+    const std::shared_ptr<Expression> ModExpr(std::shared_ptr<Expression>e1, std::shared_ptr<Expression>e2);
 
-    void EqExpr(std::shared_ptr<Expression>e1, std::shared_ptr<Expression>e2);
-    void NeqExpr(std::shared_ptr<Expression>e1, std::shared_ptr<Expression>e2);
+    const std::shared_ptr<Expression> EqExpr(std::shared_ptr<Expression>e1, std::shared_ptr<Expression>e2);
+    const std::shared_ptr<Expression> NeqExpr(std::shared_ptr<Expression>e1, std::shared_ptr<Expression>e2);
 
-    void GteExpr(std::shared_ptr<Expression>e1, std::shared_ptr<Expression>e2);
-    void GtExpr(std::shared_ptr<Expression>e1, std::shared_ptr<Expression>e2);
+    const std::shared_ptr<Expression> GteExpr(std::shared_ptr<Expression>e1, std::shared_ptr<Expression>e2);
+    const std::shared_ptr<Expression> GtExpr(std::shared_ptr<Expression>e1, std::shared_ptr<Expression>e2);
 
-    void LteExpr(std::shared_ptr<Expression>e1, std::shared_ptr<Expression>e2);
-    void LtExpr(std::shared_ptr<Expression>e1, std::shared_ptr<Expression>e2);
+    const std::shared_ptr<Expression> LteExpr(std::shared_ptr<Expression>e1, std::shared_ptr<Expression>e2);
+    const std::shared_ptr<Expression> LtExpr(std::shared_ptr<Expression>e1, std::shared_ptr<Expression>e2);
 
 
     class MetaCoder {
