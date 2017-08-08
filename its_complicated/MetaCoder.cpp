@@ -6,11 +6,11 @@
 namespace RSWCOMP {
 
 /*****LVALUE METHODS*****/
-    std::shared_ptr<LValue> LVFromID(std::string yo) {
+    std::shared_ptr<LValue> LVFromID(std::string s) {
         auto curr = MetaCoder::curr();
-        auto findResult = find(curr->LVs.begin(), curr->LVs.end(), yo);
+        auto findResult = curr->LVs.find(s);
         if (findResult == curr->LVs.end()) {
-            throw "LValue with id " + yo + " not found.";
+            throw "LValue with id " + s + " not found.";
         }
         return findResult->second;
     }
@@ -18,12 +18,12 @@ namespace RSWCOMP {
     std::shared_ptr<Expression> ExprFromLV(std::shared_ptr<LValue> lv) {
         auto curr = MetaCoder::curr();
 
-        auto result = find(curr->LVs.begin(), curr->LVs.end(), lv->name);
+        auto result = curr->LVs.find(lv->name);
         if(result == curr->LVs.end()) throw "LValue " + lv->name + " not found in current MetaCoder map.";
 
         auto tempLV = result->second;
 
-        Expression expr;
+        Expression expr("", StringType());
         switch (tempLV->lvi) {
             case GLOBAL_REF:
                 expr = Expression(Register::consumeRegister(), tempLV->type);
@@ -52,14 +52,52 @@ namespace RSWCOMP {
         coder->out << "syscall" << std::endl;
     }
 
-/*****CASTING VARIABLES*****/
+/*****CASTING/VALUE OPERATIONS*****/
     const std::shared_ptr<Expression> CharExpr(char c) {
         return std::make_shared<Expression>((int)c, CharType());
+    }
+
+    const std::shared_ptr<Expression> IntExpr(int i) {
+        return std::make_shared<Expression>(i, IntType());
+    }
+
+    const std::shared_ptr<Expression> StringExpr(std::string s) {
+        return std::make_shared<Expression>(s, StringType());
     }
 
     const std::shared_ptr<Expression> ChrExpr(std::shared_ptr<Expression> expr) {
         expr->intToChar();
         return expr;
+    }
+    const std::shared_ptr<Expression> OrdExpr(std::shared_ptr<Expression> e) {
+        e->charToInt();
+        return e;
+    }
+
+    const std::shared_ptr<Expression> PredExpr(std::shared_ptr<Expression> e) {
+        auto curr = MetaCoder::curr();
+
+        if(e->containedDataType().t_name == T_CHARACTER || T_INTEGER) {
+            curr->out << "\taddi " << e->getRegister()->regName << "," << e->getRegister()->regName << ", -1" << std::endl;
+        }
+        if(e->containedDataType().t_name == T_BOOLEAN) {
+            curr->out << "\tnot " << e->getRegister()->regName << "," << e->getRegister()->regName << std::endl;
+        }
+        e->step(false);
+        return e;
+
+    }
+    const std::shared_ptr<Expression> SuccExpr(std::shared_ptr<Expression> e) {
+        auto curr = MetaCoder::curr();
+
+        if(e->containedDataType().t_name == T_CHARACTER || T_INTEGER) {
+            curr->out << "\taddi " << e->getRegister()->regName << "," << e->getRegister()->regName << ", 1" << std::endl;
+        }
+        if(e->containedDataType().t_name == T_BOOLEAN) {
+            curr->out << "\tnot " << e->getRegister()->regName << "," << e->getRegister()->regName << std::endl;
+        }
+        e->step(true);
+        return e;
     }
 
 /*****BOOLEAN OPERATIONS*****/
@@ -70,7 +108,6 @@ namespace RSWCOMP {
 
         return std::make_shared<Expression>(result_register, e1->containedDataType());
     }
-
     const std::shared_ptr<Expression> OrExpr(std::shared_ptr<Expression> e1, std::shared_ptr<Expression> e2) {
         auto curr = MetaCoder::curr();
         auto result_register = Register::consumeRegister();
@@ -78,6 +115,15 @@ namespace RSWCOMP {
 
         return std::make_shared<Expression>(result_register, e1->containedDataType());
     }
+    const std::shared_ptr<Expression> NotExpr(std::shared_ptr<Expression> e) {
+        auto curr = MetaCoder::curr();
+        auto result_register = Register::consumeRegister();
+
+        curr->out << "\tnot " << result_register->regName << "," << e->getRegister()->regName << std::endl;
+
+        return std::make_shared<Expression>(result_register, e->containedDataType());
+    }
+
 /*****MATH OPERATIONS*****/
     const std::shared_ptr<Expression> AddExpr(std::shared_ptr<Expression> e1, std::shared_ptr<Expression> e2) {
         auto curr = MetaCoder::curr();
@@ -115,6 +161,14 @@ namespace RSWCOMP {
         curr->out << "\tdiv " << e1->getRegister()->regName << "," << e2->getRegister()-> regName << "\n\tmfhi " << result_register->regName << std::endl;
 
         return std::make_shared<Expression>(result_register, e1->containedDataType());
+    }
+    const std::shared_ptr<Expression> UnMinusExpr(std::shared_ptr<Expression> e) {
+        auto curr = MetaCoder::curr();
+        auto result_register = Register::consumeRegister();
+
+        curr->out << "\tneg " << result_register->regName << "," << e->getRegister()->regName << std::endl;
+
+        return std::make_shared<Expression>(result_register, e->containedDataType());
     }
 
     const std::shared_ptr<Expression> EqExpr(std::shared_ptr<Expression> e1, std::shared_ptr<Expression> e2) {
@@ -171,7 +225,7 @@ namespace RSWCOMP {
 /*****DATA OPERATIONS*****/
     void Assign(std::shared_ptr<LValue> lv, std::shared_ptr<Expression> exp) {
         if (lv->lvi != GLOBAL_REF && lv->lvi != STACK_REF) throw "Constants and Data Entries (i.e., string identifiers) Cannot Be Overwritten.";
-        if (exp->containedDataType().typeName == "String" || exp->containedDataType().typeName == "") throw "Expression is either a string or null. This is unacceptable.";
+        if (exp->containedDataType().t_name == T_STRING || exp->containedDataType().t_name == T_UNSET) throw "Expression is either a string or null. This is unacceptable.";
 
         std::string destMemLoc = ""; //Destination Memory Location
         auto curr = MetaCoder::curr();
@@ -191,7 +245,7 @@ namespace RSWCOMP {
         newLV.name = id;
         newLV.type = exp->containedDataType();
 
-        if (exp->containedDataType().typeName == "String") {
+        if (exp->containedDataType().t_name == T_STRING) {
             newLV.lvi = DATA;
             newLV.name = id;
             curr->constExprs[id] = exp;
@@ -211,12 +265,12 @@ namespace RSWCOMP {
 
         int MIPSReadType = 0;
 
-        if (lv->type.typeName == "Integer") MIPSReadType = 5;
-        else if (lv->type.typeName == "Character") MIPSReadType = 12;
+        if (lv->type.t_name == T_INTEGER) MIPSReadType = 5;
+        else if (lv->type.t_name == T_CHARACTER) MIPSReadType = 12;
 
         std::string destMemLoc = "";
-        if (lv->lvi == GLOBAL_REF) destMemLoc = lv->globalOffset + "($gp)";
-        else if (lv->lvi == STACK_REF) destMemLoc = lv->stackOffset + "($sp)";
+        if (lv->lvi == GLOBAL_REF) destMemLoc = std::to_string(lv->globalOffset) + "($gp)";
+        else if (lv->lvi == STACK_REF) destMemLoc = std::to_string(lv->stackOffset) + "($sp)";
 
         curr->out << "\tli $v0, " << MIPSReadType << "\n\tsyscall\n\tsw $v0," << destMemLoc << std::endl;
     }
@@ -224,34 +278,38 @@ namespace RSWCOMP {
     void WriteExpr(std::shared_ptr<Expression> exp) {
         auto curr = MetaCoder::curr();
         switch(exp->containedDataType().memBlkSize) {
-            case 4:
-                if(exp->containedDataType().typeName == "Integer" || exp->containedDataType().typeName == "Boolean") {
+            case 4: {                if(exp->containedDataType().t_name == T_INTEGER || exp->containedDataType().t_name == T_BOOLEAN) {
                     curr->out << "\tli $v0, 1\n\tli $a0, " << exp->getRegister()->regName << "\n\tsyscall\n";
                 }
                 else {
                     curr->out << "\tli $v0, 11\n\tli $a0, " << exp->getRegister()->regName << "\n\tsyscall\n";
                 }
                 break;
-            case -1: //This means it's a string. Ain't no way it'll be nothin' else
+            }
+
+            case -1: {
+                //This means it's a string. Ain't no way it'll be nothin' else
                 std::string searchFor = StringToAsciizData(exp);
-                declareConst(searchFor,std::make_shared<Expression>(exp->getStrVal()));
+                declareConst(searchFor,std::make_shared<Expression>(exp->getStrVal(), StringType()));
 
                 std::shared_ptr<LValue> lvTemp = LVFromID(searchFor);
                 auto expRet = ExprFromLV(lvTemp);
 
                 curr->out << "\tli $v0, 4\n\tla $a0, " << expRet->getRegister()->regName << "\n\tsyscall\n";
                 break;
-            default:
+            }
+            default: {
                 throw "Something horrible has happened. Your expression holds a non-standard data type, and is thus unprintable.";
+            }
         }
     }
 /*****STRING HELPERS*****/
     std::string StringToAsciizData(std::shared_ptr<Expression> exp) {
-        if (exp->containedDataType().typeName != "String") {
-            throw "attempted to label non-string data type. Type: " + exp->containedDataType().typeName;
+        if (exp->containedDataType().t_name != T_STRING) {
+            throw "attempted to label non-string data type.";
         }
         auto curr = MetaCoder::curr();
-        std::string stringLabel = "stringLabel" + curr->nextStringCtr();
+        std::string stringLabel = "stringLabel" + std::to_string(curr->nextStringCtr());
         return stringLabel;
     }
 

@@ -364,7 +364,7 @@ Expression : CHARCONSTSY                         {$$ = RSWCOMP::CharExpr($1);}
            | FunctionCall                        {}
            | INTSY                               {$$ = RSWCOMP::IntExpr($1);}
            | LPARENSY Expression RPARENSY        {}
-           | LValue                              {$$ = RSWCOMP::LoadExpr($1);}
+           | LValue                              {$$ = RSWCOMP::ExprFromLV($1);}
            | MINUSSY Expression %prec UMINUSSY   {$$ = RSWCOMP::UnMinusExpr($2);}
            | NOTSY Expression                    {$$ = RSWCOMP::NotExpr($2);}
            | ORDSY LPARENSY Expression RPARENSY  {$$ = RSWCOMP::OrdExpr($3);}
@@ -382,7 +382,8 @@ LValue : LValue DOTSY IDENTSY {}
        ;
 %%
 
-void yyerror(const char* msg)
+void yy::Parser::error (const location_type& l,
+                          const std::string& m)
 {
-  LOG(FATAL) << msg;
+  driver.error (l, m);
 }

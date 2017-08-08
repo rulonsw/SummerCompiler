@@ -20,10 +20,18 @@ namespace RSWCOMP {
     void WriteId(std::string id);
 
     const std::shared_ptr<Expression> CharExpr(char c);
+    const std::shared_ptr<Expression> IntExpr(int i);
+    const std::shared_ptr<Expression> StringExpr(std::string s);
+
     const std::shared_ptr<Expression> ChrExpr(std::shared_ptr<Expression> expr);
+    const std::shared_ptr<Expression> OrdExpr(std::shared_ptr<Expression> e);
+
+    const std::shared_ptr<Expression> PredExpr(std::shared_ptr<Expression> e);
+    const std::shared_ptr<Expression> SuccExpr(std::shared_ptr<Expression> e);
 
     const std::shared_ptr<Expression> AndExpr(std::shared_ptr<Expression> e1, std::shared_ptr<Expression> e2);
     const std::shared_ptr<Expression> OrExpr(std::shared_ptr<Expression> e1, std::shared_ptr<Expression> e2);
+    const std::shared_ptr<Expression> NotExpr(std::shared_ptr<Expression> e);
 
     void WriteVars(Type t);
 
@@ -51,6 +59,7 @@ namespace RSWCOMP {
     const std::shared_ptr<Expression> MultExpr(std::shared_ptr<Expression>e1, std::shared_ptr<Expression>e2);
     const std::shared_ptr<Expression> DivExpr(std::shared_ptr<Expression>e1, std::shared_ptr<Expression>e2);
     const std::shared_ptr<Expression> ModExpr(std::shared_ptr<Expression>e1, std::shared_ptr<Expression>e2);
+    const std::shared_ptr<Expression> UnMinusExpr(std::shared_ptr<Expression>e);
 
     const std::shared_ptr<Expression> EqExpr(std::shared_ptr<Expression>e1, std::shared_ptr<Expression>e2);
     const std::shared_ptr<Expression> NeqExpr(std::shared_ptr<Expression>e1, std::shared_ptr<Expression>e2);
@@ -83,7 +92,7 @@ namespace RSWCOMP {
             return j;
         }
         static std::shared_ptr<MetaCoder> curr();
-        static std::vector<std::string> existingIds;
+        std::vector<std::string> existingIds;
         std::unordered_map<std::string, std::shared_ptr<LValue>> LVs;
         std::unordered_map<std::string, std::shared_ptr<Expression>> constExprs;
         std::ofstream out;

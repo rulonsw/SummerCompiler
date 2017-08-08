@@ -37,6 +37,9 @@ YY_DECL;
         void begin_scan();
         void end_scan();
 
+        void error (const yy::location& l, const std::string& m);
+        void error (const std::string& m);
+
 
     };
 

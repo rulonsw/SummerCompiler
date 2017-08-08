@@ -27,8 +27,8 @@ namespace RSWCOMP {
     }
 
     void Expression::intToChar() {
-        if(this->containsDataType.typeName == "Integer" || this->containsDataType.typeName == "Character") {
-            this->containsDataType.typeName = "Character";
+        if(containsDataType.t_name == T_INTEGER || containsDataType.t_name == T_CHARACTER) {
+            containsDataType.t_name = T_CHARACTER;
         }
         else {
             std::cout << "Incompatible type - only integers are castable to characters." << std::endl;
@@ -37,12 +37,28 @@ namespace RSWCOMP {
         }
     }
     void Expression::charToInt() {
-        if(this->containsDataType.typeName == std::string("Integer") || this->containsDataType.typeName == std::string("Character")) {
-            this->containsDataType.typeName = "Integer";
+        if(containsDataType.t_name == T_INTEGER || this->containsDataType.t_name == T_CHARACTER) {
+            containsDataType.t_name = T_INTEGER;
         }
         else {
             std::cout << "Incompatible type - only characters are castable to integers." << std::endl;
             throw "Typecast Error - charToInt";
         }
+    }
+
+    void Expression::step(bool up) {
+        switch(containsDataType.t_name) {
+            case T_INTEGER:
+            case T_CHARACTER:
+                numericValue = up ? numericValue + 1 : numericValue - 1;
+                break;
+            case T_BOOLEAN:
+                numericValue = !numericValue;
+                break;
+            default:
+                std::cout << "Method incompatible with data type - only boolean values, characters and integers are step-compatible." << std::endl;
+                throw "Invalid Use of Member Method - step(bool up)";
+        }
+
     }
 }

@@ -1,6 +1,5 @@
 #include <iostream>
 #include "Driver.h"
-#include "parser.hpp"
 
 
 
@@ -13,12 +12,21 @@
 
         sourceFile = src;
         begin_scan();
-        yy::Parser parser = (*this);
+        yy::Parser parser (*this);
         int p_result = parser.parse();
         end_scan();
         return p_result;
     }
+    Driver::~Driver() {}
+    void Driver::error (const yy::location& l, const std::string& m)
+    {
+        std::cerr << l << ": " << m << std::endl;
+    }
 
+    void Driver::error (const std::string& m)
+    {
+        std::cerr << m << std::endl;
+    }
     void Driver::begin_scan() {
 
     }

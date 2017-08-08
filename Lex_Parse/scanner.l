@@ -2,86 +2,86 @@
 #include <cstring>
 #include <cstdlib>
 #include "parser.hpp"
-#include "ProcessLog.hpp"
-#include "logger.h"
+
+static yy::location loc;
 %}
 
-%option nounput
+%option nounput noyywrap batch debug noinput
 
 %%
 
-array|ARRAY         {return ARRAYSY;}
-begin|BEGIN         {return BEGINSY;}
-chr|CHR             {return CHRSY;}
-const|CONST         {return CONSTSY;} 
-downto|DOWNTO       {return DOWNTOSY;} 
-do|DO               {return DOSY;} 
-else|ELSE           {return ELSESY;}
-elseif|ELSEIF       {return ELSEIFSY;}
-end|END             {return ENDSY;} 
-forward|FORWARD     {return FORWARDSY;} 
-for|FOR             {return FORSY;} 
-function|FUNCTION   {return FUNCTIONSY;} 
-if|IF               {return IFSY;}
-of|OF               {return OFSY;}
-ord|ORD             {return ORDSY;} 
-pred|PRED           {return PREDSY;} 
-procedure|PROCEDURE {return PROCEDURESY;}
-read|READ           {return READSY;} 
-record|RECORD       {return RECORDSY;}
-repeat|REPEAT       {return REPEATSY;}
-return|RETURN       {return RETURNSY;} 
-stop|STOP           {return STOPSY;}
-succ|SUCC           {return SUCCSY;}
-then|THEN           {return THENSY;} 
-to|TO               {return TOSY;}
-type|TYPE           {return TYPESY;}
-until|UNTIL         {return UNTILSY;}
-var|VAR             {return VARSY;}
-ref|REF             {return REFSY;}
-while|WHILE         {return WHILESY;}
-write|WRITE         {return WRITESY;} 
+array|ARRAY         {return yy::Parser::token::ARRAYSY;}
+begin|BEGIN         {return yy::Parser::token::BEGINSY;}
+chr|CHR             {return yy::Parser::token::CHRSY;}
+const|CONST         {return yy::Parser::token::CONSTSY;}
+downto|DOWNTO       {return yy::Parser::token::DOWNTOSY;}
+do|DO               {return yy::Parser::token::DOSY;}
+else|ELSE           {return yy::Parser::token::ELSESY;}
+elseif|ELSEIF       {return yy::Parser::token::ELSEIFSY;}
+end|END             {return yy::Parser::token::ENDSY;}
+forward|FORWARD     {return yy::Parser::token::FORWARDSY;}
+for|FOR             {return yy::Parser::token::FORSY;}
+function|FUNCTION   {return yy::Parser::token::FUNCTIONSY;}
+if|IF               {return yy::Parser::token::IFSY;}
+of|OF               {return yy::Parser::token::OFSY;}
+ord|ORD             {return yy::Parser::token::ORDSY;}
+pred|PRED           {return yy::Parser::token::PREDSY;}
+procedure|PROCEDURE {return yy::Parser::token::PROCEDURESY;}
+read|READ           {return yy::Parser::token::READSY;}
+record|RECORD       {return yy::Parser::token::RECORDSY;}
+repeat|REPEAT       {return yy::Parser::token::REPEATSY;}
+return|RETURN       {return yy::Parser::token::RETURNSY;}
+stop|STOP           {return yy::Parser::token::STOPSY;}
+succ|SUCC           {return yy::Parser::token::SUCCSY;}
+then|THEN           {return yy::Parser::token::THENSY;}
+to|TO               {return yy::Parser::token::TOSY;}
+type|TYPE           {return yy::Parser::token::TYPESY;}
+until|UNTIL         {return yy::Parser::token::UNTILSY;}
+var|VAR             {return yy::Parser::token::VARSY;}
+ref|REF             {return yy::Parser::token::REFSY;}
+while|WHILE         {return yy::Parser::token::WHILESY;}
+write|WRITE         {return yy::Parser::token::WRITESY;}
 
-"%"  {return MODSY;}
-"&"  {return ANDSY;}  
-"("  {return LPARENSY;} 
-")"  {return RPARENSY;} 
-"*"  {return MULTSY;} 
-"+"  {return PLUSSY;}
-","  {return COMMASY;}
-"-"  {return MINUSSY;} 
-"."  {return DOTSY;}
-"/"  {return DIVSY;}
-":"  {return COLONSY;}
-":=" {return ASSIGNSY;}
-";"  {return SCOLONSY;} 
-"<"  {return LTSY;} 
-"<=" {return LTESY;} 
-"<>" {return NEQSY;} 
-"="  {return EQSY;}
-">"  {return GTSY;}
-">=" {return GTESY;} 
-"["  {return LBRACKETSY;} 
-"]"  {return RBRACKETSY;}
-"|"  {return ORSY;}
-"~"  {return NOTSY;}
+"%"  {return yy::Parser::token::MODSY;}
+"&"  {return yy::Parser::token::ANDSY;}
+"("  {return yy::Parser::token::LPARENSY;}
+")"  {return yy::Parser::token::RPARENSY;}
+"*"  {return yy::Parser::token::MULTSY;}
+"+"  {return yy::Parser::token::PLUSSY;}
+","  {return yy::Parser::token::COMMASY;}
+"-"  {return yy::Parser::token::MINUSSY;}
+"."  {return yy::Parser::token::DOTSY;}
+"/"  {return yy::Parser::token::DIVSY;}
+":"  {return yy::Parser::token::COLONSY;}
+":=" {return yy::Parser::token::ASSIGNSY;}
+";"  {return yy::Parser::token::SCOLONSY;}
+"<"  {return yy::Parser::token::LTSY;}
+"<=" {return yy::Parser::token::LTESY;}
+"<>" {return yy::Parser::token::NEQSY;}
+"="  {return yy::Parser::token::EQSY;}
+">"  {return yy::Parser::token::GTSY;}
+">=" {return yy::Parser::token::GTESY;}
+"["  {return yy::Parser::token::LBRACKETSY;}
+"]"  {return yy::Parser::token::RBRACKETSY;}
+"|"  {return yy::Parser::token::ORSY;}
+"~"  {return yy::Parser::token::NOTSY;}
 
-[a-zA-Z][a-zA-Z0-9_]* {yylval.str_val = strdup(yytext); return IDENTSY;}
+[a-zA-Z][a-zA-Z0-9_]* {return yy::Parser::token::IDENTSY;}
 
-[0][0-7]+          {yylval.int_val = strtol(yytext,nullptr,0);return INTSY;}
-[0][x][0-9a-fA-F]+ {yylval.int_val = strtol(yytext,nullptr,0);return INTSY;}
-[0-9]+[0-9]*       {yylval.int_val = strtol(yytext,nullptr,0);return INTSY;}
+[0][0-7]+          {return yy::Parser::token::INTSY;}
+[0][x][0-9a-fA-F]+ {return yy::Parser::token::INTSY;}
+[0-9]+[0-9]*       {return yy::Parser::token::INTSY;}
 
-'\\n'               {yylval.char_val = '\n';return CHARCONSTSY;}
-'\\t'               {yylval.char_val = '\t';return CHARCONSTSY;}
-'\\r'               {yylval.char_val = '\r';return CHARCONSTSY;}
-'\\?.'             {yylval.char_val = yytext[1];return CHARCONSTSY;}
+'\\n'               {return yy::Parser::token::CHARCONSTSY;}
+'\\t'               {return yy::Parser::token::CHARCONSTSY;}
+'\\r'               {return yy::Parser::token::CHARCONSTSY;}
+'\\?.'             {return yy::Parser::token::CHARCONSTSY;}
 
-\"[a-zA-Z0-9~`!@'#$%^&*()_+=\-\[\]{}\\\/><,.:;| ]*\" {yylval.str_val = strdup(yytext); return STRINGSY;}
+\"[a-zA-Z0-9~`!@'#$%^&*()_+=\-\[\]{}\\\/><,.:;| ]*\" {return yy::Parser::token::STRINGSY;}
 
-\$.*$ {ProcessLog::getInstance()->nextLine();}
-\n {ProcessLog::getInstance()->nextLine();}
-[ \t]+ {}
-. {LOG(ERROR) << std::string("Unexpected token ")+yytext;}
+\$.*$ {loc.lines(yyleng); loc.step();}
+\n {loc.lines(yyleng); loc.step();}
+[ \t]+ {loc.step();}
+. { std::cerr << std::string("Unexpected token ")+yytext;}
 
 %%

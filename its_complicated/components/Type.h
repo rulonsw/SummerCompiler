@@ -8,12 +8,18 @@
 #ifndef TYPE_H
 #define TYPE_H
 
-
 namespace RSWCOMP {
+    enum TYPE_NAME {
+        T_UNSET,
+        T_INTEGER,
+        T_BOOLEAN,
+        T_CHARACTER,
+        T_STRING
+    };
     class Type {
     public:
         ~Type() = default;
-        std::string typeName = "";
+        TYPE_NAME t_name = T_UNSET;
         int memBlkSize = INT32_MIN;
     };
 
@@ -21,7 +27,7 @@ namespace RSWCOMP {
     public:
         IntType() {
             memBlkSize = 4;
-            typeName = "Integer";
+            t_name = T_INTEGER;
         }
     };
 
@@ -29,7 +35,7 @@ namespace RSWCOMP {
     public:
         BooleanType() {
             memBlkSize = 4;
-            typeName = "Boolean";
+            t_name = T_BOOLEAN;
         }
     };
 
@@ -37,7 +43,7 @@ namespace RSWCOMP {
     public:
         CharType() {
             memBlkSize = 4;
-            typeName = "Character";
+            t_name = T_CHARACTER;
         }
     };
 
@@ -45,7 +51,7 @@ namespace RSWCOMP {
     public:
         StringType() {
             memBlkSize = -1;
-            typeName = "String";
+            t_name = T_STRING;
         }
     };
 }

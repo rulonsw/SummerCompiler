@@ -15,7 +15,6 @@ namespace RSWCOMP {
         strHolder
     };
 
-
     class Expression {
     private:
         ExprDataType exprType;
@@ -27,6 +26,8 @@ namespace RSWCOMP {
     public:
         void intToChar();
         void charToInt();
+
+        void step(bool up);
 
         std::string getStrVal() {return strValue;}
 
