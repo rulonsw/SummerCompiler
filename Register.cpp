@@ -8,6 +8,7 @@ namespace RSWCOMP {
 
     std::shared_ptr<Register> Register::consumeRegister() {
         std::string consumedRegister;
+        Pool rp;
         consumedRegister = rp.available.back();
 
         rp.available.pop_back();

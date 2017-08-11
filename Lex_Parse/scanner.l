@@ -1,83 +1,88 @@
 %{
-#include <cstring>
+#include <cerrno>
+#include <climits>
 #include <cstdlib>
-#include "parser.hpp"
+#include <string>
+#include <cstdlib>
+#include "parser.h"
+#include "Driver.h"
 
 static yy::location loc;
+
 %}
 
-%option nounput noyywrap batch debug noinput
+%option nounput batch debug noinput
 
 %%
 
-array|ARRAY         {return yy::Parser::token::ARRAYSY;}
-begin|BEGIN         {return yy::Parser::token::BEGINSY;}
-chr|CHR             {return yy::Parser::token::CHRSY;}
-const|CONST         {return yy::Parser::token::CONSTSY;}
-downto|DOWNTO       {return yy::Parser::token::DOWNTOSY;}
-do|DO               {return yy::Parser::token::DOSY;}
-else|ELSE           {return yy::Parser::token::ELSESY;}
-elseif|ELSEIF       {return yy::Parser::token::ELSEIFSY;}
-end|END             {return yy::Parser::token::ENDSY;}
-forward|FORWARD     {return yy::Parser::token::FORWARDSY;}
-for|FOR             {return yy::Parser::token::FORSY;}
-function|FUNCTION   {return yy::Parser::token::FUNCTIONSY;}
-if|IF               {return yy::Parser::token::IFSY;}
-of|OF               {return yy::Parser::token::OFSY;}
-ord|ORD             {return yy::Parser::token::ORDSY;}
-pred|PRED           {return yy::Parser::token::PREDSY;}
-procedure|PROCEDURE {return yy::Parser::token::PROCEDURESY;}
-read|READ           {return yy::Parser::token::READSY;}
-record|RECORD       {return yy::Parser::token::RECORDSY;}
-repeat|REPEAT       {return yy::Parser::token::REPEATSY;}
-return|RETURN       {return yy::Parser::token::RETURNSY;}
-stop|STOP           {return yy::Parser::token::STOPSY;}
-succ|SUCC           {return yy::Parser::token::SUCCSY;}
-then|THEN           {return yy::Parser::token::THENSY;}
-to|TO               {return yy::Parser::token::TOSY;}
-type|TYPE           {return yy::Parser::token::TYPESY;}
-until|UNTIL         {return yy::Parser::token::UNTILSY;}
-var|VAR             {return yy::Parser::token::VARSY;}
-ref|REF             {return yy::Parser::token::REFSY;}
-while|WHILE         {return yy::Parser::token::WHILESY;}
-write|WRITE         {return yy::Parser::token::WRITESY;}
+array|ARRAY         {return yy::Parser::make_ARRAYSY(loc);}
+begin|BEGIN         {return yy::Parser::make_BEGINSY(loc);}
+chr|CHR             {return yy::Parser::make_CHRSY(loc);}
+const|CONST         {return yy::Parser::make_CONSTSY(loc);}
+downto|DOWNTO       {return yy::Parser::make_DOWNTOSY(loc);}
+do|DO               {return yy::Parser::make_DOSY(loc);}
+else|ELSE           {return yy::Parser::make_ELSESY(loc);}
+elseif|ELSEIF       {return yy::Parser::make_ELSEIFSY(loc);}
+end|END             {return yy::Parser::make_ENDSY(loc);}
+forward|FORWARD     {return yy::Parser::make_FORWARDSY(loc);}
+for|FOR             {return yy::Parser::make_FORSY(loc);}
+function|FUNCTION   {return yy::Parser::make_FUNCTIONSY(loc);}
+if|IF               {return yy::Parser::make_IFSY(loc);}
+of|OF               {return yy::Parser::make_OFSY(loc);}
+ord|ORD             {return yy::Parser::make_ORDSY(loc);}
+pred|PRED           {return yy::Parser::make_PREDSY(loc);}
+procedure|PROCEDURE {return yy::Parser::make_PROCEDURESY(loc);}
+read|READ           {return yy::Parser::make_READSY(loc);}
+record|RECORD       {return yy::Parser::make_RECORDSY(loc);}
+repeat|REPEAT       {return yy::Parser::make_REPEATSY(loc);}
+return|RETURN       {return yy::Parser::make_RETURNSY(loc);}
+stop|STOP           {return yy::Parser::make_STOPSY(loc);}
+succ|SUCC           {return yy::Parser::make_SUCCSY(loc);}
+then|THEN           {return yy::Parser::make_THENSY(loc);}
+to|TO               {return yy::Parser::make_TOSY(loc);}
+type|TYPE           {return yy::Parser::make_TYPESY(loc);}
+until|UNTIL         {return yy::Parser::make_UNTILSY(loc);}
+var|VAR             {return yy::Parser::make_VARSY(loc);}
+ref|REF             {return yy::Parser::make_REFSY(loc);}
+while|WHILE         {return yy::Parser::make_WHILESY(loc);}
+write|WRITE         {return yy::Parser::make_WRITESY(loc);}
 
-"%"  {return yy::Parser::token::MODSY;}
-"&"  {return yy::Parser::token::ANDSY;}
-"("  {return yy::Parser::token::LPARENSY;}
-")"  {return yy::Parser::token::RPARENSY;}
-"*"  {return yy::Parser::token::MULTSY;}
-"+"  {return yy::Parser::token::PLUSSY;}
-","  {return yy::Parser::token::COMMASY;}
-"-"  {return yy::Parser::token::MINUSSY;}
-"."  {return yy::Parser::token::DOTSY;}
-"/"  {return yy::Parser::token::DIVSY;}
-":"  {return yy::Parser::token::COLONSY;}
-":=" {return yy::Parser::token::ASSIGNSY;}
-";"  {return yy::Parser::token::SCOLONSY;}
-"<"  {return yy::Parser::token::LTSY;}
-"<=" {return yy::Parser::token::LTESY;}
-"<>" {return yy::Parser::token::NEQSY;}
-"="  {return yy::Parser::token::EQSY;}
-">"  {return yy::Parser::token::GTSY;}
-">=" {return yy::Parser::token::GTESY;}
-"["  {return yy::Parser::token::LBRACKETSY;}
-"]"  {return yy::Parser::token::RBRACKETSY;}
-"|"  {return yy::Parser::token::ORSY;}
-"~"  {return yy::Parser::token::NOTSY;}
+"%"  {return yy::Parser::make_MODSY(loc);}
+"&"  {return yy::Parser::make_ANDSY(loc);}
+"("  {return yy::Parser::make_LPARENSY(loc);}
+")"  {return yy::Parser::make_RPARENSY(loc);}
+"*"  {return yy::Parser::make_MULTSY(loc);}
+"+"  {return yy::Parser::make_PLUSSY(loc);}
+","  {return yy::Parser::make_COMMASY(loc);}
+"-"  {return yy::Parser::make_MINUSSY(loc);}
+"."  {return yy::Parser::make_DOTSY(loc);}
+"/"  {return yy::Parser::make_DIVSY(loc);}
+":"  {return yy::Parser::make_COLONSY(loc);}
+":=" {return yy::Parser::make_ASSIGNSY(loc);}
+";"  {return yy::Parser::make_SCOLONSY(loc);}
+"<"  {return yy::Parser::make_LTSY(loc);}
+"<=" {return yy::Parser::make_LTESY(loc);}
+"<>" {return yy::Parser::make_NEQSY(loc);}
+"="  {return yy::Parser::make_EQSY(loc);}
+">"  {return yy::Parser::make_GTSY(loc);}
+">=" {return yy::Parser::make_GTESY(loc);}
+"["  {return yy::Parser::make_LBRACKETSY(loc);}
+"]"  {return yy::Parser::make_RBRACKETSY(loc);}
+"|"  {return yy::Parser::make_ORSY(loc);}
+"~"  {return yy::Parser::make_NOTSY(loc);}
 
-[a-zA-Z][a-zA-Z0-9_]* {return yy::Parser::token::IDENTSY;}
+[a-zA-Z][a-zA-Z0-9_]* {return yy::Parser::make_IDENTSY(loc);}
 
-[0][0-7]+          {return yy::Parser::token::INTSY;}
-[0][x][0-9a-fA-F]+ {return yy::Parser::token::INTSY;}
-[0-9]+[0-9]*       {return yy::Parser::token::INTSY;}
+[0][0-7]+          {return yy::Parser::make_INTSY(loc);}
+[0][x][0-9a-fA-F]+ {return yy::Parser::make_INTSY(loc);}
+[0-9]+[0-9]*       {return yy::Parser::make_INTSY(loc);}
 
-'\\n'               {return yy::Parser::token::CHARCONSTSY;}
-'\\t'               {return yy::Parser::token::CHARCONSTSY;}
-'\\r'               {return yy::Parser::token::CHARCONSTSY;}
-'\\?.'             {return yy::Parser::token::CHARCONSTSY;}
+'\\n'               {return yy::Parser::make_CHARCONSTSY(loc);}
+'\\t'               {return yy::Parser::make_CHARCONSTSY(loc);}
+'\\r'               {return yy::Parser::make_CHARCONSTSY(loc);}
+'\\?.'             {return yy::Parser::make_CHARCONSTSY(loc);}
 
-\"[a-zA-Z0-9~`!@'#$%^&*()_+=\-\[\]{}\\\/><,.:;| ]*\" {return yy::Parser::token::STRINGSY;}
+\"[a-zA-Z0-9~`!@'#$%^&*()_+=\-\[\]{}\\\/><,.:;| ]*\" {return yy::Parser::make_STRINGSY(loc);}
 
 \$.*$ {loc.lines(yyleng); loc.step();}
 \n {loc.lines(yyleng); loc.step();}

@@ -1,11 +1,12 @@
 #include <iostream>
 #include "Driver.h"
+#include "parser.h"
 
 
 
 
     Driver::Driver()
-            : trace(false) {
+            : trace_scanning (false), trace_parsing(false) {
     }
 
     int Driver::parse(const std::string& src) {
@@ -13,6 +14,7 @@
         sourceFile = src;
         begin_scan();
         yy::Parser parser (*this);
+       // parser.set_debug_level(trace_parsing);
         int p_result = parser.parse();
         end_scan();
         return p_result;

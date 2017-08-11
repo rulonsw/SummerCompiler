@@ -15,11 +15,9 @@
 
 %code requires
 {
-#include <iostream>
 #include <string>
-#include "../its_complicated/components/Expression.h"
-#include "../its_complicated/components/LValue.h"
-#include "../its_complicated/MetaCoder.h"
+#include "its_complicated/components/Expression.h"
+#include "its_complicated/MetaCoder.h"
 class Driver;
 }
 
@@ -42,67 +40,67 @@ class Driver;
 }
 
 
-%token ARRAYSY 
-%token ASSIGNSY 
-%token BEGINSY 
+%token ARRAYSY
+%token ASSIGNSY
+%token BEGINSY
 %token CHRSY
-%token COLONSY 
-%token COMMASY 
-%token CONSTSY 
-%token DIVSY 
-%token DOSY 
-%token DOTSY 
-%token DOWNTOSY 
-%token ELSEIFSY 
-%token ELSESY 
-%token ENDSY 
-%token EQSY 
-%token FORSY 
-%token FORWARDSY 
-%token FUNCTIONSY 
-%token GTESY 
-%token GTSY 
+%token COLONSY
+%token COMMASY
+%token CONSTSY
+%token DIVSY
+%token DOSY
+%token DOTSY
+%token DOWNTOSY
+%token ELSEIFSY
+%token ELSESY
+%token ENDSY
+%token EQSY
+%token FORSY
+%token FORWARDSY
+%token FUNCTIONSY
+%token GTESY
+%token GTSY
 %token <std::string> IDENTSY
-%token IFSY 
-%token INTSY 
-%token LBRACKETSY 
-%token LPARENSY 
-%token LTESY 
-%token LTSY 
-%token MINUSSY 
-%token MODSY 
+%token IFSY
+%token INTSY
+%token LBRACKETSY
+%token LPARENSY
+%token LTESY
+%token LTSY
+%token MINUSSY
+%token MODSY
 %token MULTSY
-%token NOTSY 
+%token NOTSY
 %token OFSY
-%token ORDSY 
-%token PLUSSY 
-%token PREDSY 
-%token PROCEDURESY 
+%token ORDSY
+%token PLUSSY
+%token PREDSY
+%token PROCEDURESY
 %token RBRACKETSY
-%token READSY 
-%token RECORDSY 
-%token REFSY 
-%token REPEATSY 
-%token RETURNSY 
-%token RPARENSY 
-%token SCOLONSY 
-%token STOPSY 
-%token STRINGSY 
+%token READSY
+%token RECORDSY
+%token REFSY
+%token REPEATSY
+%token RETURNSY
+%token RPARENSY
+%token SCOLONSY
+%token STOPSY
+%token STRINGSY
 %token SUCCSY
-%token THENSY 
-%token TOSY 
-%token TYPESY 
-%token UNTILSY 
-%token VARSY 
-%token WHILESY 
+%token THENSY
+%token TOSY
+%token TYPESY
+%token UNTILSY
+%token VARSY
+%token WHILESY
 %token WRITESY
 
 %left ANDSY ORSY
 %right NOTSY
-%nonassoc EQSY LTESY GTESY GTSY LTSY NEQSY 
-%left PLUSSY MINUSSY 
+%nonassoc EQSY LTESY GTESY GTSY LTSY NEQSY
+%left PLUSSY MINUSSY
 %left DIVSY MODSY MULTSY
-%right UMINUSSY 
+%right UMINUSSY
 
 %token <char> CHARCONSTSY
 %type <int> Arguments
@@ -381,7 +379,6 @@ LValue : LValue DOTSY IDENTSY {}
        | IDENTSY {/*$$ = RSWCOMP::LoadId($1);*/}
        ;
 %%
-
 void yy::Parser::error (const location_type& l,
                           const std::string& m)
 {

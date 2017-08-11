@@ -1,5 +1,3 @@
-#TODO: REFACTOR THIS CMAKE FILE TO LINK EVERYTHING CORRECTLY
-
 cmake_minimum_required(VERSION 3.7)
 project(SummerCompiler)
 
@@ -10,21 +8,7 @@ find_package(Boost COMPONENTS program_options system filesystem REQUIRED)
 
 set(CMAKE_CXX_STANDARD 11)
 
-set(SOURCE_FILES
-        Register.h
-        Register.cpp
-        its_complicated/components/Expression.h
-        its_complicated/components/Expression.cpp
-        its_complicated/components/LValue.h
-        its_complicated/components/LValue.cpp
-        its_complicated/MetaCoder.h
-        its_complicated/MetaCoder.cpp
-        its_complicated/components/Type.h
-        ${BISON_CpslParser_OUTPUTS}
-        ${FLEX_CpslScanner_OUTPUTS})
-
-
-bison_target(Parser Lex_Parse/parser.y ${CMAKE_CURRENT_BINARY_DIR}/parser.cpp COMPILE_FLAGS -d)
+bison_target(Parser Lex_Parse/parser.y ${CMAKE_CURRENT_BINARY_DIR}/parser.cpp DEFINES_FILE ${CMAKE_CURRENT_BINARY_DIR}/parser.h)
 flex_target(Scanner Lex_Parse/scanner.l ${CMAKE_CURRENT_BINARY_DIR}/scanner.cpp)
 add_flex_bison_dependency(Scanner Parser)
 
@@ -38,12 +22,23 @@ include_directories(
 )
 set(code_src
         ${BISON_Parser_OUTPUTS}
-        ${FLEX_Scanner_OUTPUTS})
+        ${FLEX_Scanner_OUTPUTS}
+        ${CMAKE_CURRENT_SOURCE_DIR}/its_complicated/components/Expression.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/its_complicated/components/Expression.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/its_complicated/components/LValue.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/its_complicated/components/LValue.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/its_complicated/MetaCoder.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/its_complicated/MetaCoder.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/Register.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/Register.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/Driver.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/Driver.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/its_complicated/components/Type.h
+        )
 
 source_group("interpreter" FILES ${code_src})
 set(main_srcs Driver.cpp Driver.h)
-
-source_group("MAIN" FILES )
+source_group("Main" FILES)
 
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
