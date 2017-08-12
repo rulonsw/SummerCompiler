@@ -95,6 +95,8 @@ class Driver;
 %token WHILESY
 %token WRITESY
 
+%token END  0  "end of file"
+
 %left ANDSY ORSY
 %right NOTSY
 %nonassoc EQSY LTESY GTESY GTSY LTSY NEQSY

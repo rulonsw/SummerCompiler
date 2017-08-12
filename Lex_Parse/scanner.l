@@ -4,11 +4,30 @@
 #include <cstdlib>
 #include <string>
 #include <cstdlib>
+#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/replace.hpp>
 #include "parser.h"
 #include "Driver.h"
 
 static yy::location loc;
 
+
+std::string cleanString (std::string s, bool toChar)
+{
+    if (toChar) {
+        boost::erase_all(s,"\'");
+        boost::replace_all(s, "\\n", "\n");
+        boost::replace_all(s, "\\r", "\r");
+        boost::replace_all(s, "\\b", "\b");
+        boost::replace_all(s, "\\t", "\t");
+        boost::replace_all(s, "\\f", "\f");
+        boost::replace_all(s, "\\", "");
+        return s.substr(0,1);
+    }
+    boost::erase_all(s, "\"");
+    return s;
+
+}
 %}
 
 %option nounput batch debug noinput
@@ -70,17 +89,18 @@ write|WRITE         {return yy::Parser::make_WRITESY(loc);}
 "]"  {return yy::Parser::make_RBRACKETSY(loc);}
 "|"  {return yy::Parser::make_ORSY(loc);}
 "~"  {return yy::Parser::make_NOTSY(loc);}
+<<EOF>> {return yy::Parser::make_END(loc);}
 
-[a-zA-Z][a-zA-Z0-9_]* {return yy::Parser::make_IDENTSY(loc);}
+[a-zA-Z][a-zA-Z0-9_]* {std::string str = cleanString(yytext, false); return yy::Parser::make_IDENTSY(str, loc);}
 
-[0][0-7]+          {return yy::Parser::make_INTSY(loc);}
-[0][x][0-9a-fA-F]+ {return yy::Parser::make_INTSY(loc);}
-[0-9]+[0-9]*       {return yy::Parser::make_INTSY(loc);}
+[0][0-7]+          {int retVal = strtol(yytext, NULL, 8); return yy::Parser::make_INTSY(retVal, loc);}
+[0][x][0-9a-fA-F]+ {int retVal = strtol(yytext, NULL, 0); return yy::Parser::make_INTSY(retVal, loc);}
+[0-9]+[0-9]*       {int retVal = strtol(yytext, NULL, 10); return yy::Parser::make_INTSY(retVal, loc);}
 
-'\\n'               {return yy::Parser::make_CHARCONSTSY(loc);}
-'\\t'               {return yy::Parser::make_CHARCONSTSY(loc);}
-'\\r'               {return yy::Parser::make_CHARCONSTSY(loc);}
-'\\?.'             {return yy::Parser::make_CHARCONSTSY(loc);}
+'\\n'               {std::string str = cleanString(yytext, true); return yy::Parser::make_CHARCONSTSY(str.c_str()[0],loc);}
+'\\t'               {std::string str = cleanString(yytext, true); return yy::Parser::make_CHARCONSTSY(str.c_str()[0],loc);}
+'\\r'               {std::string str = cleanString(yytext, true); return yy::Parser::make_CHARCONSTSY(str.c_str()[0],loc);}
+'\\?.'             {std::string str = cleanString(yytext, true); return yy::Parser::make_CHARCONSTSY(str.c_str()[0], loc);}
 
 \"[a-zA-Z0-9~`!@'#$%^&*()_+=\-\[\]{}\\\/><,.:;| ]*\" {return yy::Parser::make_STRINGSY(loc);}
 

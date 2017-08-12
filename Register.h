@@ -11,18 +11,10 @@
 namespace RSWCOMP {
     enum regDataType {ID, STRING, CHAR, INT};
 
-    struct Pool {
-        static std::vector<std::string> available;
-        Pool() {
-            available = {"$s0", "$s1", "$s2", "$s3", "$s4", "$s5", "$s6", "$s7",
-                         "$t0", "$t1", "$t2", "$t3", "$t4", "$t5", "$t6", "$t7", "$t8", "$t9"};
-        }
-    };
-    std::vector<std::string> Pool::available = {"$s0", "$s1", "$s2", "$s3", "$s4", "$s5", "$s6", "$s7",
-                                                "$t0", "$t1", "$t2", "$t3", "$t4", "$t5", "$t6", "$t7", "$t8", "$t9"};
+
     class Register {
     private:
-        Pool rp;
+        static std::vector<std::string> available;
 
     public:
         std::string regName;
@@ -30,7 +22,7 @@ namespace RSWCOMP {
                 :regName(n){};
 
         ~Register(){
-            rp.available.push_back(this->regName);
+            available.push_back(this->regName);
         };
         static std::shared_ptr<Register> consumeRegister();
 
