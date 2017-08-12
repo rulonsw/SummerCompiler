@@ -27,27 +27,27 @@
     {
         std::cerr << m << std::endl;
     }
-    void Driver::begin_scan() {
-
-    }
-
-    void Driver::end_scan() {
-
-    }
 
 int main(int argc, char* argv[]) {
+    Driver driver;
     //Usage of program:
         //cpslc [-o outfile] infile
-    if ((argc == 3 && argv[1] == std::string("-o")) /*if -o is used and there aren't at least two args afterward...*/||
+    if ((argc == 3) /*if -o is used and there aren't at least two args afterward...*/||
             (argc == 4 && argv[1] != std::string("-o"))/*if 4 args are supplied and the second isn't "-o"...*/||
             argc > 4 /*if there are more than 4 total arguments...*/) {
         std::cout << "ERR: Invalid function call. If you're attempting to invoke the compiler\n"
                 "with a custom output name, Please pair the \"-o\" option with a valid\n"
                      "number of arguments, followed by the input filename.\n"
-                             "Sample:\n\n>>cpslc -o out_file_name cpsl_file_name" << std::endl;
+                             "Sample:\n\n>>cpslc -o out_file_name.asm cpsl_file_name.cpsl" << std::endl;
         return -1;
     }
     try {
+
+        int result = argc == 2? driver.parse(argv[1]) : driver.parse(argv[3]);
+        std::cout << argc << std::endl;
+        std::cout << argv[0] << "     " << argv[1] << "     " << argv[2] << "     " << argv[3] << std::endl;
+
+        return result;
 
     }catch(std::string e){
         std::cout << "Compilation error encountered. Error type: " << e << std::endl;

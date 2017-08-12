@@ -2,9 +2,17 @@
 // Created by Rulon Wood on 6/12/17.
 //
 
+#include <iostream>
 #include "MetaCoder.h"
 namespace RSWCOMP {
 
+    MetaCoder::MetaCoder() {
+        std::cout << "Writing code to " << _outputFileName << "..." << std::endl;
+        out.open(_outputFileName);
+    }
+    MetaCoder::~MetaCoder() {
+        out.close();
+    }
 /*****LVALUE METHODS*****/
     std::shared_ptr<LValue> LVFromID(std::string s) {
         auto curr = MetaCoder::curr();
@@ -314,7 +322,6 @@ namespace RSWCOMP {
     }
 
     std::shared_ptr<MetaCoder> MetaCoder::_content = nullptr;
-    std::string MetaCoder::_outputFileName = "output.asm";
 
     std::shared_ptr<MetaCoder> MetaCoder::curr() {
         if(_content == nullptr) {

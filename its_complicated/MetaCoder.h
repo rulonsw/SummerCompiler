@@ -73,13 +73,17 @@ namespace RSWCOMP {
 
     class MetaCoder {
         static std::shared_ptr<MetaCoder> _content;
-        static std::string _outputFileName;
+        std::string _outputFileName = "out.asm";
         int globalOffset =  0;
         int stackOffset = 0;
         int stringCounter = 0;
 
 
     public:
+        MetaCoder();
+        ~MetaCoder();
+        std::ofstream out;
+
         int topOfGlobal() {
             int i = globalOffset;
             globalOffset += 4;
@@ -95,7 +99,6 @@ namespace RSWCOMP {
         std::vector<std::string> existingIds;
         std::unordered_map<std::string, std::shared_ptr<LValue>> LVs;
         std::unordered_map<std::string, std::shared_ptr<Expression>> constExprs;
-        std::ofstream out;
         int nextStringCtr() {
             int ret = stringCounter;
             stringCounter++;

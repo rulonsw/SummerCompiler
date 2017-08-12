@@ -110,3 +110,14 @@ write|WRITE         {return yy::Parser::make_WRITESY(loc);}
 . { std::cerr << std::string("Unexpected token ")+yytext;}
 
 %%
+void Driver::begin_scan() {
+    yy_flex_debug = trace_scanning;
+    if(!(yyin = fopen(sourceFile.c_str(), "r"))) {
+        error("File name " + sourceFile + " is unable to be opened. strerror: " + strerror(errno));
+        throw "FILE READ ERROR";
+    }
+}
+
+void Driver::end_scan() {
+    fclose(yyin);
+}
