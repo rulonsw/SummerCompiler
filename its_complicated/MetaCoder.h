@@ -23,6 +23,9 @@ namespace RSWCOMP {
     const std::shared_ptr<Expression> IntExpr(int i);
     const std::shared_ptr<Expression> StringExpr(std::string s);
 
+    void MakeVar(Type t);
+    void MakeId(std::string s);
+
     const std::shared_ptr<Expression> ChrExpr(std::shared_ptr<Expression> expr);
     const std::shared_ptr<Expression> OrdExpr(std::shared_ptr<Expression> e);
 
@@ -96,7 +99,7 @@ namespace RSWCOMP {
             return j;
         }
         static std::shared_ptr<MetaCoder> curr();
-        std::vector<std::string> existingIds;
+        std::vector<std::string> ids_toWrite;
         std::unordered_map<std::string, std::shared_ptr<LValue>> LVs;
         std::unordered_map<std::string, std::shared_ptr<Expression>> constExprs;
         int nextStringCtr() {

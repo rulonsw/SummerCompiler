@@ -3,6 +3,7 @@
 //
 
 #include <iostream>
+#include <algorithm>
 #include "MetaCoder.h"
 namespace RSWCOMP {
 
@@ -71,6 +72,34 @@ namespace RSWCOMP {
 
     const std::shared_ptr<Expression> StringExpr(std::string s) {
         return std::make_shared<Expression>(s, StringType());
+    }
+
+    void MakeId(std::string s) {
+        auto curr = MetaCoder::curr();
+        curr->ids_toWrite.push_back(s);
+    }
+    void MakeVar(Type t) {
+        /*This method is essentially only called when there's 1+ things in the `ids_toWrite` vector.*/
+        auto curr = MetaCoder::curr();
+
+        if(curr->ids_toWrite.size() == 0) throw("Variable creation attempt with empty list of var names.");
+
+        while(curr->ids_toWrite.size() != 0) {
+            auto foo = curr->ids_toWrite[0];
+            auto isFound = curr->LVs.find(foo);
+            if (isFound != curr->LVs.end()) {
+                throw("Duplicate LValue name found during compilation. Please retry using distinct var names for each variable.");
+            }
+            LValue lv;
+
+            lv.lvi = GLOBAL_REF;
+            lv.name = foo;
+            lv.globalOffset = curr->topOfGlobal(t.memBlkSize);
+            lv.type = t;
+
+            curr->ids_toWrite.erase(curr->ids_toWrite.begin());
+        }
+
     }
 
     const std::shared_ptr<Expression> ChrExpr(std::shared_ptr<Expression> expr) {
@@ -246,7 +275,7 @@ namespace RSWCOMP {
 
     void declareConst(std::string id, std::shared_ptr<Expression> exp) {
         auto curr = MetaCoder::curr();
-        if (find(curr->existingIds.begin(), curr->existingIds.end(), id) != curr->existingIds.end()) {
+        if (find(curr->ids_toWrite.begin(), curr->ids_toWrite.end(), id) != curr->ids_toWrite.end()) {
             throw "data with existing id " + id + " is already being used.";
         }
         LValue newLV;
@@ -325,7 +354,7 @@ namespace RSWCOMP {
 
     std::shared_ptr<MetaCoder> MetaCoder::curr() {
         if(_content == nullptr) {
-            std::make_shared<MetaCoder>();
+            RSWCOMP::MetaCoder::_content = std::make_shared<MetaCoder>();
             _content->out << ".globl main" << std::endl << std::endl << "main:" << std::endl;
         }
         return MetaCoder::_content;

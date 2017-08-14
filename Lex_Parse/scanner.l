@@ -111,10 +111,11 @@ write|WRITE         {return yy::Parser::make_WRITESY(loc);}
 
 %%
 void Driver::begin_scan() {
+    std::string in = "/Users/rulonwood/CLionProjects/SummerCompiler/in.cpsl";
     yy_flex_debug = trace_scanning;
-    if(!(yyin = fopen(sourceFile.c_str(), "r"))) {
+    if(!(yyin = fopen(in.c_str(), "r"))) {
         error("File name " + sourceFile + " is unable to be opened. strerror: " + strerror(errno));
-        throw "FILE READ ERROR";
+        throw("FILE READ ERROR");
     }
 }
 

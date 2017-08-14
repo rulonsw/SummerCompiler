@@ -143,7 +143,7 @@ class Driver;
 %type <int> StopStatement
 %type <int> ThenPart
 %type <int> ToHead
-%type <int> Type
+%type <RSWCOMP::Type> Type
 %type <std::shared_ptr<RSWCOMP::Expression>> WhileHead
 %type <std::shared_ptr<RSWCOMP::Expression>> WhileStatement
 %type <int> WriteArgs
@@ -243,8 +243,8 @@ FieldDecls : FieldDecls FieldDecl {}
 FieldDecl : IdentList COLONSY Type SCOLONSY {}
           ;
 
-IdentList : IdentList COMMASY IDENTSY {}
-          | IDENTSY {}
+IdentList : IdentList COMMASY IDENTSY {RSWCOMP::MakeId($3);}
+          | IDENTSY {RSWCOMP::MakeId($1);}
           ;
 
 ArrayType : ARRAYSY LBRACKETSY Expression COLONSY Expression RBRACKETSY OFSY Type {}
@@ -258,7 +258,7 @@ VarDecls    : VarDecls VarDecl
             | VarDecl
             ;
 
-VarDecl : IdentList COLONSY Type SCOLONSY {}
+VarDecl : IdentList COLONSY Type SCOLONSY {RSWCOMP::MakeVar($3);}
         ;
 
 Statement : Assignment {$$ = $1;}
@@ -378,7 +378,7 @@ FunctionCall : IDENTSY LPARENSY OptArguments RPARENSY {}
 
 LValue : LValue DOTSY IDENTSY {}
        | LValue LBRACKETSY Expression RBRACKETSY {}
-       | IDENTSY {/*$$ = RSWCOMP::LoadId($1);*/}
+       | IDENTSY {$$ = RSWCOMP::LoadId($1);}
        ;
 %%
 void yy::Parser::error (const location_type& l,

@@ -40,7 +40,7 @@ source_group("interpreter" FILES ${code_src})
 set(main_srcs Driver.cpp Driver.h)
 source_group("Main" FILES)
 
-set(CMAKE_CXX_STANDARD 11)
+#set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 set(EXTRA_COMPILE_FLAGS "-g -std=c++11")
 
