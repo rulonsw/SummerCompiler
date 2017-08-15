@@ -43,6 +43,7 @@ namespace RSWCOMP {
 
     void ReadValue(std::shared_ptr<LValue> lv);
     void WriteExpr(std::shared_ptr<Expression> exp);
+    Type SearchForSimple(std::string tString);
 
     void Assign(std::shared_ptr<LValue> lv, std::shared_ptr<Expression> exp);
 

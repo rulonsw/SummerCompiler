@@ -85,7 +85,7 @@ class Driver;
 %token RPARENSY
 %token SCOLONSY
 %token STOPSY
-%token STRINGSY
+%token <std::string> STRINGSY
 %token SUCCSY
 %token THENSY
 %token TOSY
@@ -137,7 +137,7 @@ class Driver;
 %type <int> RecordType
 %type <int> RepeatStatement
 %type <int> ReturnStatement
-%type <int> SimpleType
+%type <RSWCOMP::Type> SimpleType
 %type <int> Statement
 %type <int> StatementList
 %type <int> StopStatement
@@ -152,7 +152,7 @@ class Driver;
 %type <std::string> stringString
 
 %%
-Program : ProgramHead Block DOTSY {}
+Program : ProgramHead Block DOTSY {RSWCOMP::MainBlock();}
 				;
 
 ProgramHead : OptConstDecls OptTypeDecls OptVarDecls PFDecls
@@ -225,12 +225,12 @@ TypeDecls    : TypeDecls TypeDecl
 TypeDecl : IDENTSY EQSY Type SCOLONSY {}
          ;
 
-Type : SimpleType {}
+Type : SimpleType {$$ = $1;}
      | RecordType {}
      | ArrayType {}
      ;
 
-SimpleType : IDENTSY {}
+SimpleType : IDENTSY {$$ = RSWCOMP::SearchForSimple($1);}
            ;
 
 RecordType : RECORDSY FieldDecls ENDSY {}
@@ -369,16 +369,16 @@ Expression : CHARCONSTSY                         {$$ = RSWCOMP::CharExpr($1);}
            | NOTSY Expression                    {$$ = RSWCOMP::NotExpr($2);}
            | ORDSY LPARENSY Expression RPARENSY  {$$ = RSWCOMP::OrdExpr($3);}
            | PREDSY LPARENSY Expression RPARENSY {$$ = RSWCOMP::PredExpr($3);}
-           | STRINGSY                            {/*$$ = RSWCOMP::StrExpr($1);delete($1);*/}
+           | STRINGSY                            {$$ = RSWCOMP::StringExpr($1);}
            | SUCCSY LPARENSY Expression RPARENSY {$$ = RSWCOMP::SuccExpr($3);}
            ;
 
 FunctionCall : IDENTSY LPARENSY OptArguments RPARENSY {}
              ;
 
-LValue : LValue DOTSY IDENTSY {}
-       | LValue LBRACKETSY Expression RBRACKETSY {}
-       | IDENTSY {$$ = RSWCOMP::LoadId($1);}
+LValue : LValue DOTSY IDENTSY {$$ = nullptr;}
+       | LValue LBRACKETSY Expression RBRACKETSY {$$ = nullptr;}
+       | IDENTSY {$$ = RSWCOMP::loadId($1);}
        ;
 %%
 void yy::Parser::error (const location_type& l,

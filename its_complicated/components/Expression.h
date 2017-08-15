@@ -30,6 +30,7 @@ namespace RSWCOMP {
         void step(bool up);
 
         std::string getStrVal() {return strValue;}
+        int getNumericValue() {return numericValue;}
 
         std::shared_ptr<Register> getRegister();
         Type containedDataType() {

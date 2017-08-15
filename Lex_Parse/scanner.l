@@ -102,7 +102,7 @@ write|WRITE         {return yy::Parser::make_WRITESY(loc);}
 '\\r'               {std::string str = cleanString(yytext, true); return yy::Parser::make_CHARCONSTSY(str.c_str()[0],loc);}
 '\\?.'             {std::string str = cleanString(yytext, true); return yy::Parser::make_CHARCONSTSY(str.c_str()[0], loc);}
 
-\"[a-zA-Z0-9~`!@'#$%^&*()_+=\-\[\]{}\\\/><,.:;| ]*\" {return yy::Parser::make_STRINGSY(loc);}
+\"[a-zA-Z0-9~`!@'#$%^&*()_+=\-\[\]{}\\\/><,.:;| ]*\" {std::string str = cleanString(yytext,false); return yy::Parser::make_STRINGSY(str.c_str(), loc);}
 
 \$.*$ {loc.lines(yyleng); loc.step();}
 \n {loc.lines(yyleng); loc.step();}

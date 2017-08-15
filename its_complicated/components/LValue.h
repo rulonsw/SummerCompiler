@@ -28,7 +28,7 @@ namespace RSWCOMP {
         std::string name;
     };
 
-    std::shared_ptr<LValue> loadFromId(std::string id);
+    std::shared_ptr<LValue> loadId(std::string id);
 
 }
 

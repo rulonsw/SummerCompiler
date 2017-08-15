@@ -18,6 +18,6 @@ namespace RSWCOMP {
         consumedRegister = available.back();
 
         available.pop_back();
-        return std::make_shared<Register>(Register(consumedRegister));
+        return std::make_shared<Register>(consumedRegister);
     }
 }

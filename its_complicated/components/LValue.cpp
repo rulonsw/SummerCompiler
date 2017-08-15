@@ -7,16 +7,16 @@
 #include "its_complicated/MetaCoder.h"
 
 namespace RSWCOMP {
-    std::shared_ptr<LValue> LoadId(std::string id) {
+    std::shared_ptr<LValue> loadId(std::string id) {
         auto curr = MetaCoder::curr();
         auto found = curr->LVs.find(id);
 
         if (found == curr->LVs.end()) {
-            LValue l;
-            //TODO: Add LValue of this type to the LValue unordered_map, LVs
+            throw("No variable with provided id exists.");
         }
-        else std::cout << "variable id " << id << " has already been defined." << std::endl;
-        exit(1);
+        else {
+            return found->second;
+        }
     }
 
 }

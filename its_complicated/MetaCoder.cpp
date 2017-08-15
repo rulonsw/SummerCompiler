@@ -6,6 +6,26 @@
 #include <algorithm>
 #include "MetaCoder.h"
 namespace RSWCOMP {
+/****Sections****/
+    void MainBlock() {
+        ConstBlock();
+        auto curr = MetaCoder::curr();
+        Stop();
+    }
+    void ConstBlock() {
+        auto curr = MetaCoder::curr();
+        curr->out << ".data" << std::endl;
+
+        for (auto foo : curr->constExprs) {
+            if (foo.second->containedDataType().t_name == T_STRING) {
+                curr->out << foo.first << " .asciiz " << "\"" << foo.second->getStrVal() << "\"" << std::endl;
+            }
+            else {
+                curr->out << foo.first << " .word " << foo.second->getNumericValue() << std::endl;
+            }
+        }
+        curr->out << "\n\n\n";
+    }
 
     MetaCoder::MetaCoder() {
         std::cout << "Writing code to " << _outputFileName << "..." << std::endl;
@@ -96,6 +116,7 @@ namespace RSWCOMP {
             lv.name = foo;
             lv.globalOffset = curr->topOfGlobal(t.memBlkSize);
             lv.type = t;
+            curr->LVs[foo] = std::make_shared<RSWCOMP::LValue>(lv);
 
             curr->ids_toWrite.erase(curr->ids_toWrite.begin());
         }
@@ -165,7 +186,7 @@ namespace RSWCOMP {
     const std::shared_ptr<Expression> AddExpr(std::shared_ptr<Expression> e1, std::shared_ptr<Expression> e2) {
         auto curr = MetaCoder::curr();
         auto result_register = Register::consumeRegister();
-        curr->out <<"\tadd " << result_register->regName << ", " << e1->getRegister() << "," << e2->getRegister()->regName << std::endl;
+        curr->out <<"\tadd " << result_register->regName << ", " << e1->getRegister()->regName << "," << e2->getRegister()->regName << std::endl;
 
         return std::make_shared<Expression>(result_register, e1->containedDataType());
     }
@@ -180,7 +201,7 @@ namespace RSWCOMP {
     const std::shared_ptr<Expression> MultExpr(std::shared_ptr<Expression> e1, std::shared_ptr<Expression> e2) {
         auto curr = MetaCoder::curr();
         auto result_register = Register::consumeRegister();
-        curr->out <<"\tmul " <<result_register->regName << "," << e1->getRegister() << "," << e2->getRegister() << std::endl;
+        curr->out <<"\tmul " <<result_register->regName << "," << e1->getRegister()->regName << "," << e2->getRegister()->regName << std::endl;
 
         return std::make_shared<Expression>(result_register, e1->containedDataType());
     }
@@ -269,8 +290,8 @@ namespace RSWCOMP {
 
         if (lv->lvi == GLOBAL_REF) destMemLoc = std::to_string(lv->globalOffset) + "($gp)";
         else destMemLoc = std::to_string(lv->stackOffset) + "($sp)";
-
-        curr->out << "\tsw " << exp->getRegister()->regName << "," << destMemLoc << "# This is the storage location of " << lv->name << std::endl;
+        auto gottenReg = exp->getRegister()->regName;
+        curr->out << "\tsw " << gottenReg << "," << destMemLoc << "# This is the storage location of " << lv->name << std::endl;
     }
 
     void declareConst(std::string id, std::shared_ptr<Expression> exp) {
@@ -291,7 +312,8 @@ namespace RSWCOMP {
         else {
             newLV.lvi = GLOBAL_REF;
             newLV.globalOffset = curr->topOfGlobal();
-            curr->out << "\tsw " << exp->getRegister()->regName << ", " << newLV.globalOffset <<"($gp) #id: "<< id << std::endl;
+            auto gottenRegister = exp->getRegister()->regName;
+            curr->out << "\tsw " << gottenRegister << ", " << newLV.globalOffset <<"($gp) #id: "<< id << std::endl;
         }
         curr->LVs[id] = std::make_shared<LValue>(newLV);
     }
@@ -316,10 +338,10 @@ namespace RSWCOMP {
         auto curr = MetaCoder::curr();
         switch(exp->containedDataType().memBlkSize) {
             case 4: {                if(exp->containedDataType().t_name == T_INTEGER || exp->containedDataType().t_name == T_BOOLEAN) {
-                    curr->out << "\tli $v0, 1\n\tli $a0, " << exp->getRegister()->regName << "\n\tsyscall\n";
+                    curr->out << "\tli $v0, 1\n\tmove $a0, " << exp->getRegister()->regName << "\n\tsyscall\n";
                 }
                 else {
-                    curr->out << "\tli $v0, 11\n\tli $a0, " << exp->getRegister()->regName << "\n\tsyscall\n";
+                    curr->out << "\tli $v0, 11\n\tmove $a0, " << exp->getRegister()->regName << "\n\tsyscall\n";
                 }
                 break;
             }
@@ -339,6 +361,14 @@ namespace RSWCOMP {
                 throw "Something horrible has happened. Your expression holds a non-standard data type, and is thus unprintable.";
             }
         }
+    }
+    Type SearchForSimple(std::string tString) {
+        if (tString == "integer") return IntType();
+        if (tString == "boolean") return BooleanType();
+        if (tString == "character") return CharType();
+        if (tString == "string") return StringType();
+
+        throw("non-simple type lookup failed");
     }
 /*****STRING HELPERS*****/
     std::string StringToAsciizData(std::shared_ptr<Expression> exp) {
