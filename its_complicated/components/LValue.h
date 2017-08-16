@@ -25,10 +25,11 @@ namespace RSWCOMP {
         int globalOffset;
         int stackOffset;
         int constVal;
-        std::string name;
+        std::string idString;
+        std::string cpsl_refname;
     };
 
-    std::shared_ptr<LValue> loadId(std::string id);
+    std::shared_ptr<LValue> loadId(std::string cpsl_id);
 
 }
 

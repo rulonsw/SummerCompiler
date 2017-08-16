@@ -12,6 +12,9 @@ namespace RSWCOMP {
         auto curr = MetaCoder::curr();
         Stop();
     }
+
+    //TODO: Debug this method below, in specific.
+    //TODO: Problem -
     void ConstBlock() {
         auto curr = MetaCoder::curr();
         curr->out << ".data" << std::endl;
@@ -47,8 +50,8 @@ namespace RSWCOMP {
     std::shared_ptr<Expression> ExprFromLV(std::shared_ptr<LValue> lv) {
         auto curr = MetaCoder::curr();
 
-        auto result = curr->LVs.find(lv->name);
-        if(result == curr->LVs.end()) throw "LValue " + lv->name + " not found in current MetaCoder map.";
+        auto result = curr->LVs.find(lv->cpsl_refname);
+        if(result == curr->LVs.end()) throw "LValue " + lv->cpsl_refname + " not found in current MetaCoder map.";
 
         auto tempLV = result->second;
 
@@ -64,7 +67,7 @@ namespace RSWCOMP {
                 return std::make_shared<Expression>(expr);
             case DATA:
                 expr = Expression(Register::consumeRegister(), tempLV->type);
-                curr->out << "\tla " << expr.getRegister()->regName <<", " << tempLV->name << std::endl;
+                curr->out << "\tla " << expr.getRegister()->regName <<", " << tempLV->idString << std::endl;
                 return std::make_shared<Expression>(expr);
             case CONST:
                 expr = Expression(tempLV->constVal, tempLV->type);
@@ -108,12 +111,12 @@ namespace RSWCOMP {
             auto foo = curr->ids_toWrite[0];
             auto isFound = curr->LVs.find(foo);
             if (isFound != curr->LVs.end()) {
-                throw("Duplicate LValue name found during compilation. Please retry using distinct var names for each variable.");
+                throw("Duplicate LValue idString found during compilation. Please retry using distinct var names for each variable.");
             }
             LValue lv;
 
             lv.lvi = GLOBAL_REF;
-            lv.name = foo;
+            lv.idString = foo;
             lv.globalOffset = curr->topOfGlobal(t.memBlkSize);
             lv.type = t;
             curr->LVs[foo] = std::make_shared<RSWCOMP::LValue>(lv);
@@ -291,31 +294,34 @@ namespace RSWCOMP {
         if (lv->lvi == GLOBAL_REF) destMemLoc = std::to_string(lv->globalOffset) + "($gp)";
         else destMemLoc = std::to_string(lv->stackOffset) + "($sp)";
         auto gottenReg = exp->getRegister()->regName;
-        curr->out << "\tsw " << gottenReg << "," << destMemLoc << "# This is the storage location of " << lv->name << std::endl;
+        curr->out << "\tsw " << gottenReg << "," << destMemLoc << "# This is the storage location of " << lv->idString << std::endl;
     }
 
-    void declareConst(std::string id, std::shared_ptr<Expression> exp) {
+    void declareConst(std::string cpsl_ref, std::shared_ptr<Expression> exp) {
         auto curr = MetaCoder::curr();
+
+        std::string id = cpsl_ref;
+
         if (find(curr->ids_toWrite.begin(), curr->ids_toWrite.end(), id) != curr->ids_toWrite.end()) {
             throw "data with existing id " + id + " is already being used.";
         }
         LValue newLV;
-        newLV.name = id;
+        newLV.idString = id;
+        newLV.cpsl_refname = cpsl_ref;
         newLV.type = exp->containedDataType();
 
         if (exp->containedDataType().t_name == T_STRING) {
             newLV.lvi = DATA;
-            newLV.name = id;
-            curr->constExprs[id] = exp;
+            curr->constExprs[cpsl_ref] = exp;
 
         }
         else {
             newLV.lvi = GLOBAL_REF;
-            newLV.globalOffset = curr->topOfGlobal();
-            auto gottenRegister = exp->getRegister()->regName;
-            curr->out << "\tsw " << gottenRegister << ", " << newLV.globalOffset <<"($gp) #id: "<< id << std::endl;
+            newLV.globalOffset = curr->topOfGlobal(4);
+            curr->out << "\t#id: "<< id << " loaded into consts" << std::endl;
+            curr->constExprs[cpsl_ref] = exp;
         }
-        curr->LVs[id] = std::make_shared<LValue>(newLV);
+        curr->LVs[cpsl_ref] = std::make_shared<LValue>(newLV);
     }
 
     void ReadValue(std::shared_ptr<LValue> lv) {
@@ -337,7 +343,9 @@ namespace RSWCOMP {
     void WriteExpr(std::shared_ptr<Expression> exp) {
         auto curr = MetaCoder::curr();
         switch(exp->containedDataType().memBlkSize) {
-            case 4: {                if(exp->containedDataType().t_name == T_INTEGER || exp->containedDataType().t_name == T_BOOLEAN) {
+            case 4: {
+                if(exp->containedDataType().t_name == T_INTEGER || exp->containedDataType().t_name == T_BOOLEAN) {
+
                     curr->out << "\tli $v0, 1\n\tmove $a0, " << exp->getRegister()->regName << "\n\tsyscall\n";
                 }
                 else {
@@ -348,7 +356,9 @@ namespace RSWCOMP {
 
             case -1: {
                 //This means it's a string. Ain't no way it'll be nothin' else
-                std::string searchFor = StringToAsciizData(exp);
+                //TODO: If string is not found within pre-existing consts...
+                std::string searchFor = ExpToConstData(exp);
+                std::cout << "TESTING " << exp->getStrVal() << std::endl;
                 declareConst(searchFor,std::make_shared<Expression>(exp->getStrVal(), StringType()));
 
                 std::shared_ptr<LValue> lvTemp = LVFromID(searchFor);
@@ -371,11 +381,13 @@ namespace RSWCOMP {
         throw("non-simple type lookup failed");
     }
 /*****STRING HELPERS*****/
-    std::string StringToAsciizData(std::shared_ptr<Expression> exp) {
-        if (exp->containedDataType().t_name != T_STRING) {
-            throw "attempted to label non-string data type.";
-        }
+    std::string ExpToConstData(std::shared_ptr<Expression> exp) {
         auto curr = MetaCoder::curr();
+        if (exp->containedDataType().t_name != T_STRING) {
+//            throw "attempted to label non-string data type.";
+            std::string dataLabel = "dataLabel" + std::to_string(curr->nextDataCtr());
+            return dataLabel;
+        }
         std::string stringLabel = "stringLabel" + std::to_string(curr->nextStringCtr());
         return stringLabel;
     }
