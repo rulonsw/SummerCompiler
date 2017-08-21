@@ -8,12 +8,12 @@ find_package(Boost COMPONENTS program_options system filesystem REQUIRED)
 
 set(CMAKE_CXX_STANDARD 11)
 
-bison_target(Parser Lex_Parse/parser.y ${CMAKE_CURRENT_BINARY_DIR}/parser.cpp DEFINES_FILE ${CMAKE_CURRENT_BINARY_DIR}/parser.h)
-flex_target(Scanner Lex_Parse/scanner.l ${CMAKE_CURRENT_BINARY_DIR}/scanner.cpp)
+bison_target(Parser Lex_Parse/parser.y ${CMAKE_CURRENT_SOURCE_DIR}/parser.cpp DEFINES_FILE ${CMAKE_CURRENT_SOURCE_DIR}/parser.h)
+flex_target(Scanner Lex_Parse/scanner.l ${CMAKE_CURRENT_SOURCE_DIR}/scanner.cpp)
 add_flex_bison_dependency(Scanner Parser)
 
 include_directories(
-        ${CMAKE_CURRENT_BINARY_DIR}
+        ${CMAKE_CURRENT_SOURCE_DIR}
         ${CMAKE_CURRENT_SOURCE_DIR}
         ${CMAKE_CURRENT_SOURCE_DIR}/Lex_Parse
         ${CMAKE_CURRENT_SOURCE_DIR}/its_complicated
@@ -40,7 +40,7 @@ source_group("interpreter" FILES ${code_src})
 set(main_srcs Driver.cpp Driver.h)
 source_group("Main" FILES)
 
-#set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 set(EXTRA_COMPILE_FLAGS "-g -std=c++11")
 

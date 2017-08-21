@@ -11,6 +11,7 @@
 #include <fstream>
 #include <its_complicated/components/Expression.h>
 #include <vector>
+#include <sstream>
 #include "its_complicated/components/LValue.h"
 
 namespace RSWCOMP {
@@ -84,19 +85,23 @@ namespace RSWCOMP {
         ~MetaCoder();
         std::ofstream out;
 
+        std::stringstream constBlockToWrite;
+        std::stringstream mainBlockToWrite;
+
         int topOfGlobal() {
             int i = globalOffset;
             globalOffset += 4;
             return i;
         }
         int topOfGlobal(int i){
-            //Number of discrete variables involved in user-defined class held in arglist
+            //Number of discrete variables involved in user-defined class held in arglist * 4
             int j = globalOffset;
             globalOffset += i;
             return j;
         }
         static std::shared_ptr<MetaCoder> curr();
         std::vector<std::string> ids_toWrite;
+        std::vector<std::string> constNamesSeen;
         std::unordered_map<std::string, std::shared_ptr<LValue>> LVs;
         std::unordered_map<std::string, std::shared_ptr<Expression>> constExprs;
         int nextStringCtr() {

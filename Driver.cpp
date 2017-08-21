@@ -43,14 +43,17 @@ int main(int argc, char* argv[]) {
     }
     try {
         int result;
-//        if(argc == 1) {
-            result = driver.parse("/Users/rulonwood/CLionProjects/SummerCompiler/in.cpsl");
-//        }
-//        else {
-//            result = argc == 2? driver.parse(argv[1]) : driver.parse(argv[3]);
-//            std::cout << argc << std::endl;
-//            std::cout << argv[0] << "     " << argv[1] << "     " << argv[2] << "     " << argv[3] << std::endl;
-//        }
+        if(argc == 1) {
+            driver.sourceFile = "/Users/rulonwood/CLionProjects/SummerCompiler/in.cpsl";
+            result = driver.parse(driver.sourceFile);
+        }
+        else {
+
+            driver.sourceFile = argc == 2? argv[1] : argv[3];
+            result = driver.parse(driver.sourceFile);
+            std::cout << argc << std::endl;
+            std::cout << argv[0] << "     " << argv[1] << "     " << argv[2] << "     " << argv[3] << std::endl;
+        }
 
 
         return result;
