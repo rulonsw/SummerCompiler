@@ -35,6 +35,10 @@ namespace RSWCOMP {
             }
         }
     }
+
+    void SubRoutineBlocks() {
+
+    }
 /*****METACODER THINGS*****/
     std::string MetaCoder::_outputFileName = "out.asm";
     MetaCoder::MetaCoder() {
@@ -86,11 +90,37 @@ namespace RSWCOMP {
         }
     }
 
-/*****BASIC CONTROL FLOW*****/
+/***** CONTROL FLOW*****/
     void Stop() {
         auto curr = MetaCoder::curr();
         curr->out << "li $v0, 10" << std::endl;
         curr->out << "syscall" << std::endl;
+    }
+    void ProcIfStmt(std::shared_ptr<Expression> expr) {
+        auto curr = MetaCoder::curr();
+        curr->mainBlockToWrite << "\tbeq " << expr->getRegister()->regName << ", $0, "
+                                    << "elseBlock_" << curr->getConditionalBlkNum() << std::endl;
+
+        curr->changeBlkScope(true);
+    }
+    void FinishIfStmt() {
+        auto curr = MetaCoder::curr();
+        curr->mainBlockToWrite << "elseBlock_" << curr->getConditionalBlkNum() << "_end:" << std::endl;
+    }
+    void ProcElseIfStmt(std::shared_ptr<Expression> exp) {
+        auto curr = MetaCoder::curr();
+        curr->mainBlockToWrite << "elseBlock_" << curr->getConditionalBlkNum() << ":" << std::endl;
+    }
+    void FinishElseIfStmt() {
+        auto curr = MetaCoder::curr();
+    }
+    //todo: Make use of the intermediate code block stringstream that's set up in MetaCoder
+        //todo: In order to ensure proper translation order into the asm file.
+    void ProcElseStmt() {
+        auto curr = MetaCoder::curr();
+        curr->changeBlkScope(false);
+
+        curr->mainBlockToWrite << "j elseBlock_" << curr->getConditionalBlkNum() << "_end" << std::endl;
     }
 
 /*****CASTING/VALUE OPERATIONS*****/
@@ -245,8 +275,10 @@ namespace RSWCOMP {
     const std::shared_ptr<Expression> EqExpr(std::shared_ptr<Expression> e1, std::shared_ptr<Expression> e2) {
         auto curr = MetaCoder::curr();
         auto result_register = Register::consumeRegister();
+        auto e1GottenReg = e1->getRegister()->regName;
+        auto e2GottenReg = e2->getRegister()->regName;
 
-        curr->mainBlockToWrite << "\tseq " << result_register->regName << "," << e1->getRegister()->regName << "," << e2->getRegister()->regName << std::endl;
+        curr->mainBlockToWrite << "\tseq " << result_register->regName << "," << e1GottenReg << "," << e2GottenReg << std::endl;
 
         return std::make_shared<Expression>(result_register, e1->containedDataType());
     }

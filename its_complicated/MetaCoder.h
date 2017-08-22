@@ -8,6 +8,7 @@
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <map>
 #include <fstream>
 #include <its_complicated/components/Expression.h>
 #include <vector>
@@ -48,6 +49,11 @@ namespace RSWCOMP {
     void Assign(std::shared_ptr<LValue> lv, std::shared_ptr<Expression> exp);
 
     void Stop();
+    void ProcIfStmt(std::shared_ptr<Expression> exp);
+    void FinishIfStmt();
+    void ProcElseStmt();
+    void ProcElseIfStmt(std::shared_ptr<Expression> exp);
+    void FinishElseIfStmt();
 
     std::shared_ptr<Expression> ExprFromLV(std::shared_ptr<LValue> lv);
     std::shared_ptr<LValue> LVFromID(std::string id);
@@ -78,6 +84,8 @@ namespace RSWCOMP {
         int stackOffset = 0;
         int stringCounter = 0;
         int dataCounter = 0;
+        int numConditionalBlocks = 0;
+        int controlDepth = 0;
 
 
     public:
@@ -89,6 +97,15 @@ namespace RSWCOMP {
 
         std::stringstream constBlockToWrite;
         std::stringstream mainBlockToWrite;
+        std::stringstream multiUseBlockToWrite;
+
+        //True: Increase nest count
+        //False: Go up a level in the nest
+        void changeBlkScope(bool nestFurther) {
+            controlDepth = nestFurther? controlDepth +1 :
+                                   controlDepth == 0? 0 :controlDepth -1;
+        }
+        int getConditionalBlkNum() {return numConditionalBlocks;}
 
         int topOfGlobal() {
             int i = globalOffset;
@@ -102,9 +119,14 @@ namespace RSWCOMP {
             return j;
         }
         static std::shared_ptr<MetaCoder> curr();
+
         std::vector<std::string> ids_toWrite;
+
+        std::map<int, int> elseBlockLabels;
+
         std::unordered_map<std::string, std::shared_ptr<LValue>> LVs;
         std::unordered_map<std::string, std::shared_ptr<Expression>> constExprs;
+
         int nextStringCtr() {
             int ret = stringCounter;
             stringCounter++;

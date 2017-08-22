@@ -277,24 +277,24 @@ Statement : Assignment {$$ = $1;}
 Assignment : LValue ASSIGNSY Expression {RSWCOMP::Assign($1,$3);}
            ;
 
-IfStatement : IfHead ThenPart ElseIfList ElseClause ENDSY {}
+IfStatement : IfHead ThenPart ElseIfList ElseClause ENDSY {RSWCOMP::FinishIfStmt();}
             ;
 
-IfHead : IFSY Expression {}
+IfHead : IFSY Expression {RSWCOMP::ProcIfStmt($2);}
        ;
 
 ThenPart : THENSY StatementList {}
          ;
 
-ElseIfList : ElseIfList ElseIfHead ThenPart {}
-           |{}
+ElseIfList : ElseIfList ElseIfHead ThenPart {RSWCOMP::FinishElseIfStmt();}
+           |{RSWCOMP::FinishElseIfStmt();}
            ;
 
-ElseIfHead : ELSEIFSY Expression {}
+ElseIfHead : ELSEIFSY Expression {RSWCOMP::ProcElseIfStmt($2);}
            ;
 
-ElseClause : ELSESY StatementList {}
-           | {}
+ElseClause : ELSESY StatementList {RSWCOMP::ProcElseStmt();}
+           | {RSWCOMP::ProcElseStmt();}
            ;
 
 WhileStatement : WhileHead DOSY StatementList ENDSY {}
