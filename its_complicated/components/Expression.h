@@ -20,10 +20,15 @@ namespace RSWCOMP {
         ExprDataType exprType;
         std::shared_ptr<RSWCOMP::Register> regLocation = nullptr;
         RSWCOMP::Type containsDataType;
-        int numericValue = 42;
+        int numericValue = INT32_MAX;
         std::string strValue = "DEFAULT_UNSET";
 
     public:
+        inline bool operator==(Expression& rhs) {
+            return this->getNumericValue() == rhs.getNumericValue()
+                    && this->getStrVal() == rhs.getStrVal();
+        }
+        std::string exprId = "UNSET_ID";
         void intToChar();
         void charToInt();
 

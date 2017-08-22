@@ -36,21 +36,24 @@ int main(int argc, char* argv[]) {
             (argc == 4 && argv[1] != std::string("-o"))/*if 4 args are supplied and the second isn't "-o"...*/||
             argc > 4 /*if there are more than 4 total arguments...*/) {
         std::cout << "ERR: Invalid function call. If you're attempting to invoke the compiler\n"
-                "with a custom output name, Please pair the \"-o\" option with a valid\n"
+                "with a custom output idString, Please pair the \"-o\" option with a valid\n"
                      "number of arguments, followed by the input filename.\n"
                              "Sample:\n\n>>cpslc -o out_file_name.asm cpsl_file_name.cpsl" << std::endl;
         return -1;
     }
     try {
         int result;
-//        if(argc == 1) {
-            result = driver.parse("/Users/rulonwood/CLionProjects/SummerCompiler/in.cpsl");
-//        }
-//        else {
-//            result = argc == 2? driver.parse(argv[1]) : driver.parse(argv[3]);
-//            std::cout << argc << std::endl;
-//            std::cout << argv[0] << "     " << argv[1] << "     " << argv[2] << "     " << argv[3] << std::endl;
-//        }
+        if(argc == 1) {
+            driver.sourceFile = "/Users/rulonwood/CLionProjects/SummerCompiler/in.cpsl";
+            result = driver.parse(driver.sourceFile);
+        }
+        else {
+
+            driver.sourceFile = argc == 2? argv[1] : argv[3];
+            result = driver.parse(driver.sourceFile);
+            std::cout << argc << std::endl;
+            std::cout << argv[0] << "     " << argv[1] << "     " << argv[2] << "     " << argv[3] << std::endl;
+        }
 
 
         return result;

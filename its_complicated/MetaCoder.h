@@ -11,13 +11,13 @@
 #include <fstream>
 #include <its_complicated/components/Expression.h>
 #include <vector>
+#include <sstream>
 #include "its_complicated/components/LValue.h"
 
 namespace RSWCOMP {
 
     void MainBlock();
     void ConstBlock();
-    void WriteId(std::string id);
 
     const std::shared_ptr<Expression> CharExpr(char c);
     const std::shared_ptr<Expression> IntExpr(int i);
@@ -36,21 +36,17 @@ namespace RSWCOMP {
     const std::shared_ptr<Expression> OrExpr(std::shared_ptr<Expression> e1, std::shared_ptr<Expression> e2);
     const std::shared_ptr<Expression> NotExpr(std::shared_ptr<Expression> e);
 
-    void WriteVars(Type t);
-
     void declareConst(std::string id, std::shared_ptr<Expression> exp);
-    std::string StringToAsciizData(std::shared_ptr<Expression> exp);
+    std::string ExpToConstData(std::shared_ptr<Expression> exp);
 
     void ReadValue(std::shared_ptr<LValue> lv);
     void WriteExpr(std::shared_ptr<Expression> exp);
     Type SearchForSimple(std::string tString);
+    Type LookupType(std::string tName); //To be implemented...
 
     void Assign(std::shared_ptr<LValue> lv, std::shared_ptr<Expression> exp);
 
     void Stop();
-
-    Type LookupType(std::string tName);
-    void WriteConsts();
 
     std::shared_ptr<Expression> ExprFromLV(std::shared_ptr<LValue> lv);
     std::shared_ptr<LValue> LVFromID(std::string id);
@@ -81,6 +77,7 @@ namespace RSWCOMP {
         int globalOffset =  0;
         int stackOffset = 0;
         int stringCounter = 0;
+        int dataCounter = 0;
 
 
     public:
@@ -88,24 +85,34 @@ namespace RSWCOMP {
         ~MetaCoder();
         std::ofstream out;
 
+        std::stringstream constBlockToWrite;
+        std::stringstream mainBlockToWrite;
+
         int topOfGlobal() {
             int i = globalOffset;
             globalOffset += 4;
             return i;
         }
         int topOfGlobal(int i){
-            //Number of discrete variables involved in user-defined class held in arglist
+            //Number of discrete variables involved in user-defined class held in arglist * 4
             int j = globalOffset;
-            globalOffset += (4 * i);
+            globalOffset += i;
             return j;
         }
         static std::shared_ptr<MetaCoder> curr();
         std::vector<std::string> ids_toWrite;
+        std::vector<std::string> constNamesSeen;
         std::unordered_map<std::string, std::shared_ptr<LValue>> LVs;
         std::unordered_map<std::string, std::shared_ptr<Expression>> constExprs;
         int nextStringCtr() {
             int ret = stringCounter;
             stringCounter++;
+
+            return ret;
+        }
+        int nextDataCtr() {
+            int ret = dataCounter;
+            dataCounter++;
 
             return ret;
         }

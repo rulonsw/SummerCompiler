@@ -19,11 +19,24 @@ namespace RSWCOMP {
         auto curr = MetaCoder::curr();
 
         auto consumed_reg = Register::consumeRegister();
-        exprType = memoryLocation;
-        curr->out << "\tli " << consumed_reg->regName << "," << numericValue << std::endl;
+        if (exprId == "UNSET_ID" || curr->constExprs.find(exprId) == curr->constExprs.end()) {
+            exprType = memoryLocation;
+            curr->mainBlockToWrite << "\tli " << consumed_reg->regName << "," << numericValue << std::endl;
 
-        numericValue = INT32_MIN;
-        return consumed_reg;
+            numericValue = INT32_MIN;
+            return consumed_reg;
+        }
+        else {
+            exprType = memoryLocation;
+            if(containsDataType.t_name == T_STRING) {
+                curr->mainBlockToWrite << "\tmove " << consumed_reg->regName << ", " << exprId << std::endl;
+            }
+            else {
+                curr->mainBlockToWrite << "\tlw " << consumed_reg->regName << "," << exprId << std::endl;
+            }
+            return consumed_reg;
+        }
+
     }
 
     void Expression::intToChar() {

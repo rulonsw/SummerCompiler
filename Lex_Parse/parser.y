@@ -162,7 +162,7 @@ OptConstDecls : CONSTSY ConstDecls
 							;
 
 ConstDecls : ConstDecls ConstDecl
-					 | ConstDecl
+					 | ConstDecl {RSWCOMP::ConstBlock();}
 					 ;
 
 ConstDecl : IDENTSY EQSY Expression SCOLONSY {RSWCOMP::declareConst($1, $3);}
