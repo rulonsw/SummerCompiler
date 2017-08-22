@@ -44,7 +44,7 @@ int main(int argc, char* argv[]) {
     try {
         int result;
         if(argc == 1) {
-            driver.sourceFile = "/Users/rulonwood/CLionProjects/SummerCompiler/in.cpsl";
+            driver.sourceFile = "in.cpsl";
             result = driver.parse(driver.sourceFile);
         }
         else {
