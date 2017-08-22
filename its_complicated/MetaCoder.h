@@ -19,7 +19,8 @@ namespace RSWCOMP {
 
     void MainBlock();
     void ConstBlock();
-    void IfElseBlock();
+    void dumpToMain();
+
 
     const std::shared_ptr<Expression> CharExpr(char c);
     const std::shared_ptr<Expression> IntExpr(int i);
@@ -47,12 +48,13 @@ namespace RSWCOMP {
     Type LookupType(std::string tName); //To be implemented...
 
     void Assign(std::shared_ptr<LValue> lv, std::shared_ptr<Expression> exp);
-
+/*****CONTROL FLOW*****/
     void Stop();
     void ProcIfStmt(std::shared_ptr<Expression> exp);
     void FinishIfStmt();
     void ProcElseStmt();
     void ProcElseIfStmt(std::shared_ptr<Expression> exp);
+    void ProcElseIfStmt();
     void FinishElseIfStmt();
 
     std::shared_ptr<Expression> ExprFromLV(std::shared_ptr<LValue> lv);
@@ -89,7 +91,6 @@ namespace RSWCOMP {
 
 
     public:
-        static std::string _outputFileName;
 
         MetaCoder();
         ~MetaCoder();
@@ -97,8 +98,10 @@ namespace RSWCOMP {
 
         std::stringstream constBlockToWrite;
         std::stringstream mainBlockToWrite;
-        std::stringstream multiUseBlockToWrite;
+        std::stringstream intermediateBlock;
 
+        //TODO: Consider revising this. Depth doesn't need to be taken into account, as \
+                Each nested if statement will simply jump to its appropriate subroutine.
         //True: Increase nest count
         //False: Go up a level in the nest
         void changeBlkScope(bool nestFurther) {
@@ -118,6 +121,8 @@ namespace RSWCOMP {
             globalOffset += i;
             return j;
         }
+
+        static std::string _outputFileName;
         static std::shared_ptr<MetaCoder> curr();
 
         std::vector<std::string> ids_toWrite;

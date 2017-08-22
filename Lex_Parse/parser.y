@@ -287,7 +287,7 @@ ThenPart : THENSY StatementList {}
          ;
 
 ElseIfList : ElseIfList ElseIfHead ThenPart {RSWCOMP::FinishElseIfStmt();}
-           |{RSWCOMP::FinishElseIfStmt();}
+           |{RSWCOMP::FinishElseIfStmt(); RSWCOMP::ProcElseIfStmt(); }
            ;
 
 ElseIfHead : ELSEIFSY Expression {RSWCOMP::ProcElseIfStmt($2);}

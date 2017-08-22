@@ -6,7 +6,7 @@
 #include <boost/algorithm/string.hpp>
 #include "MetaCoder.h"
 namespace RSWCOMP {
-/****Sections****/
+/****SECTIONS****/
     void MainBlock() {
         auto curr = MetaCoder::curr();
         ConstBlock();
@@ -36,10 +36,29 @@ namespace RSWCOMP {
         }
     }
 
-    void SubRoutineBlocks() {
+    void dumpToMain() {
+        auto curr = MetaCoder::curr();
+        curr->mainBlockToWrite << curr->intermediateBlock.str();
 
+        curr->intermediateBlock.clear();
     }
+
 /*****METACODER THINGS*****/
+    std::shared_ptr<MetaCoder> MetaCoder::_content = nullptr;
+
+    std::shared_ptr<MetaCoder> MetaCoder::curr() {
+        if(_content == nullptr) {
+            RSWCOMP::MetaCoder::_content = std::make_shared<MetaCoder>();
+            _content->mainBlockToWrite << ".globl main\n\nmain:\n";
+
+            declareConst("true", std::make_shared<Expression>(1, BooleanType()));
+            declareConst("TRUE", std::make_shared<Expression>(1, BooleanType()));
+            declareConst("false", std::make_shared<Expression>(0, BooleanType()));
+            declareConst("FALSE", std::make_shared<Expression>(0, BooleanType()));
+        }
+        return MetaCoder::_content;
+    }
+
     std::string MetaCoder::_outputFileName = "out.asm";
     MetaCoder::MetaCoder() {
         std::cout << "Writing code to " << _outputFileName << "..." << std::endl;
@@ -111,8 +130,13 @@ namespace RSWCOMP {
         auto curr = MetaCoder::curr();
         curr->mainBlockToWrite << "elseBlock_" << curr->getConditionalBlkNum() << ":" << std::endl;
     }
+    void ProcElseIfStmt() {
+        auto curr = MetaCoder::curr();
+        curr->mainBlockToWrite << "elseBlock_" << curr->getConditionalBlkNum() << ":" << std::endl;
+    }
     void FinishElseIfStmt() {
         auto curr = MetaCoder::curr();
+        curr->mainBlockToWrite << "j elseBlock_" << curr->getConditionalBlkNum() << "_end" << std::endl;
     }
     //todo: Make use of the intermediate code block stringstream that's set up in MetaCoder
         //todo: In order to ensure proper translation order into the asm file.
@@ -435,20 +459,7 @@ namespace RSWCOMP {
         return stringLabel;
     }
 
-    std::shared_ptr<MetaCoder> MetaCoder::_content = nullptr;
 
-    std::shared_ptr<MetaCoder> MetaCoder::curr() {
-        if(_content == nullptr) {
-            RSWCOMP::MetaCoder::_content = std::make_shared<MetaCoder>();
-            _content->mainBlockToWrite << ".globl main\n\nmain:\n";
-
-            declareConst("true", std::make_shared<Expression>(1, BooleanType()));
-            declareConst("TRUE", std::make_shared<Expression>(1, BooleanType()));
-            declareConst("false", std::make_shared<Expression>(0, BooleanType()));
-            declareConst("FALSE", std::make_shared<Expression>(0, BooleanType()));
-         }
-        return MetaCoder::_content;
-    }
 
 }
 
