@@ -10,26 +10,28 @@ namespace RSWCOMP {
     void MainBlock() {
         auto curr = MetaCoder::curr();
         ConstBlock();
-        curr->constBlockToWrite << "\n\n\n";
-        curr->mainBlockToWrite << ".globl main\nmain:\n";
+        curr->constBlockToWrite << "\n\n\n\t.text\n";
         curr->out << curr->constBlockToWrite.str() << curr->mainBlockToWrite.str() << std::endl;
         Stop();
     }
 
     void ConstBlock() {
+        static bool firstPassTaken = false;
+
         auto curr = MetaCoder::curr();
 
-        if (curr->constExprs.size() == 4) {
-            curr->out << ".data" << std::endl;
+        if (!firstPassTaken) {
+            curr->constBlockToWrite << "\t.data\n";
+            firstPassTaken = true;
         }
 
         for (auto foo : curr->constExprs) {
 
             if (foo.second->containedDataType().t_name == T_STRING) {
-                curr->constBlockToWrite << foo.first << " .asciiz " << "\"" << foo.second->getStrVal() << "\"" << std::endl;
+                curr->constBlockToWrite << foo.first << ": .asciiz " << "\"" << foo.second->getStrVal() << "\"" << std::endl;
             }
             else {
-                curr->constBlockToWrite << foo.first << " .word " << foo.second->getNumericValue() << std::endl;
+                curr->constBlockToWrite << foo.first << ": .word " << foo.second->getNumericValue() << std::endl;
             }
         }
     }
@@ -64,7 +66,7 @@ namespace RSWCOMP {
                 expr = std::make_shared<Expression>(Register::consumeRegister(), tempLV->type);
                 expr->exprId = lv->idString;
                 curr->mainBlockToWrite << "\tlw " << expr->getRegister()->regName <<", " << tempLV->globalOffset << "($gp)" << std::endl;
-                return std::make_shared<Expression>(expr);
+                return (expr);
             case STACK_REF:
                 expr = std::make_shared<Expression>(Register::consumeRegister(), tempLV->type);
                 expr->exprId = lv->idString;
@@ -72,7 +74,6 @@ namespace RSWCOMP {
                 return (expr);
             case DATA:
                 expr = std::make_shared<Expression>(Register::consumeRegister(), tempLV->type);
-                curr->mainBlockToWrite << "\tla " << expr->getRegister()->regName <<", " << tempLV->idString << std::endl;
                 expr->exprId = lv->idString;
                 return (expr);
             case CONST:
@@ -124,6 +125,7 @@ namespace RSWCOMP {
 
             lv.lvi = GLOBAL_REF;
             lv.idString = foo;
+            lv.cpsl_refname = foo;
             lv.globalOffset = curr->topOfGlobal(t.memBlkSize);
             lv.type = t;
             curr->LVs[foo] = std::make_shared<RSWCOMP::LValue>(lv);
@@ -145,7 +147,7 @@ namespace RSWCOMP {
     const std::shared_ptr<Expression> PredExpr(std::shared_ptr<Expression> e) {
         auto curr = MetaCoder::curr();
 
-        if(e->containedDataType().t_name == T_CHARACTER || T_INTEGER) {
+        if(e->containedDataType().t_name == T_CHARACTER || e->containedDataType().t_name == T_INTEGER) {
             curr->mainBlockToWrite << "\taddi " << e->getRegister()->regName << "," << e->getRegister()->regName << ", -1" << std::endl;
         }
         if(e->containedDataType().t_name == T_BOOLEAN) {
@@ -158,7 +160,7 @@ namespace RSWCOMP {
     const std::shared_ptr<Expression> SuccExpr(std::shared_ptr<Expression> e) {
         auto curr = MetaCoder::curr();
 
-        if(e->containedDataType().t_name == T_CHARACTER || T_INTEGER) {
+        if(e->containedDataType().t_name == T_CHARACTER || e->containedDataType().t_name == T_INTEGER) {
             curr->mainBlockToWrite << "\taddi " << e->getRegister()->regName << "," << e->getRegister()->regName << ", 1" << std::endl;
         }
         if(e->containedDataType().t_name == T_BOOLEAN) {
@@ -348,27 +350,29 @@ namespace RSWCOMP {
         auto curr = MetaCoder::curr();
         switch(exp->containedDataType().memBlkSize) {
             case 4: {
+                auto gottenRegister = exp->getRegister()->regName;
                 if(exp->containedDataType().t_name == T_INTEGER || exp->containedDataType().t_name == T_BOOLEAN) {
-
-                    curr->mainBlockToWrite << "\tli $v0, 1\n\tmove $a0, " << exp->getRegister()->regName << "\n\tsyscall\n";
+                    curr->mainBlockToWrite << "\tli $v0, 1\n\tmove $a0, " << gottenRegister << "\n\tsyscall\n";
                 }
                 else {
-                    curr->mainBlockToWrite << "\tli $v0, 11\n\tmove $a0, " << exp->getRegister()->regName << "\n\tsyscall\n";
+                    curr->mainBlockToWrite << "\tli $v0, 11\n\tmove $a0, " << gottenRegister << "\n\tsyscall\n";
                 }
                 break;
             }
 
             case -1: {
                 //This means it's a string. Ain't no way it'll be nothin' else
-                //TODO: If string is not found within pre-existing consts...
-                std::string searchFor = ExpToConstData(exp);
-                std::cout << "TESTING " << exp->getStrVal() << std::endl;
-                declareConst(searchFor,std::make_shared<Expression>(exp->getStrVal(), StringType()));
 
-                std::shared_ptr<LValue> lvTemp = LVFromID(searchFor);
+                //If string doesn't already have an ID:
+                std::string searchFor = exp->exprId;
+                if (searchFor == "UNSET_ID") {
+                    exp->exprId = ExpToConstData(exp);
+                    declareConst(exp->exprId,std::make_shared<Expression>(exp->getStrVal(), StringType()));
+                }
+                std::shared_ptr<LValue> lvTemp = LVFromID(exp->exprId);
                 auto expRet = ExprFromLV(lvTemp);
 
-                curr->mainBlockToWrite << "\tli $v0, 4\n\tla $a0, " << expRet->getRegister()->regName << "\n\tsyscall\n";
+                curr->mainBlockToWrite << "\tli $v0, 4\n\tla $a0, " << expRet->exprId << "\n\tsyscall\n";
                 break;
             }
             default: {
@@ -389,6 +393,7 @@ namespace RSWCOMP {
     std::string ExpToConstData(std::shared_ptr<Expression> exp) {
         auto curr = MetaCoder::curr();
         if (exp->containedDataType().t_name != T_STRING) {
+            /*This may happen in the event that a Read() method is called. */
 //            throw "attempted to label non-string data type.";
             std::string dataLabel = "dataLabel" + std::to_string(curr->nextDataCtr());
             return dataLabel;
@@ -402,14 +407,13 @@ namespace RSWCOMP {
     std::shared_ptr<MetaCoder> MetaCoder::curr() {
         if(_content == nullptr) {
             RSWCOMP::MetaCoder::_content = std::make_shared<MetaCoder>();
+            _content->mainBlockToWrite << ".globl main\n\nmain:\n";
 
-            _content->constExprs["true"] = std::make_shared<Expression>(1, BooleanType());
-            _content->constExprs["TRUE"] = std::make_shared<Expression>(1, BooleanType());
-            _content->constExprs["false"] = std::make_shared<Expression>(0, BooleanType());
-            _content->constExprs["FALSE"] = std::make_shared<Expression>(0, BooleanType());
-            //TODO: Add boolean consts to const block by way of function call
-            _content->out << ".globl main" << std::endl << std::endl << "main:" << std::endl;
-        }
+            declareConst("true", std::make_shared<Expression>(1, BooleanType()));
+            declareConst("TRUE", std::make_shared<Expression>(1, BooleanType()));
+            declareConst("false", std::make_shared<Expression>(0, BooleanType()));
+            declareConst("FALSE", std::make_shared<Expression>(0, BooleanType()));
+         }
         return MetaCoder::_content;
     }
 

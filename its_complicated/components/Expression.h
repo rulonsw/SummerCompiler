@@ -24,9 +24,9 @@ namespace RSWCOMP {
         std::string strValue = "DEFAULT_UNSET";
 
     public:
-        inline bool operator==(Expression& lhs, Expression& rhs) {
-            return lhs.getNumericValue() == rhs.getNumericValue()
-                    && lhs.getStrVal() == rhs.getStrVal();
+        inline bool operator==(Expression& rhs) {
+            return this->getNumericValue() == rhs.getNumericValue()
+                    && this->getStrVal() == rhs.getStrVal();
         }
         std::string exprId = "UNSET_ID";
         void intToChar();
