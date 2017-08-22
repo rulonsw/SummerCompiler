@@ -18,6 +18,7 @@ namespace RSWCOMP {
 
     void MainBlock();
     void ConstBlock();
+    void IfElseBlock();
 
     const std::shared_ptr<Expression> CharExpr(char c);
     const std::shared_ptr<Expression> IntExpr(int i);
@@ -73,7 +74,6 @@ namespace RSWCOMP {
 
     class MetaCoder {
         static std::shared_ptr<MetaCoder> _content;
-        std::string _outputFileName = "out.asm";
         int globalOffset =  0;
         int stackOffset = 0;
         int stringCounter = 0;
@@ -81,6 +81,8 @@ namespace RSWCOMP {
 
 
     public:
+        static std::string _outputFileName;
+
         MetaCoder();
         ~MetaCoder();
         std::ofstream out;
@@ -101,7 +103,6 @@ namespace RSWCOMP {
         }
         static std::shared_ptr<MetaCoder> curr();
         std::vector<std::string> ids_toWrite;
-        std::vector<std::string> constNamesSeen;
         std::unordered_map<std::string, std::shared_ptr<LValue>> LVs;
         std::unordered_map<std::string, std::shared_ptr<Expression>> constExprs;
         int nextStringCtr() {
@@ -118,9 +119,6 @@ namespace RSWCOMP {
         }
 
     };
-
-    static std::shared_ptr<MetaCoder> cntxt;
-
 }
 
 

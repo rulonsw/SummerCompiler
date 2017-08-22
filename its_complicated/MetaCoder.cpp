@@ -35,7 +35,8 @@ namespace RSWCOMP {
             }
         }
     }
-
+/*****METACODER THINGS*****/
+    std::string MetaCoder::_outputFileName = "out.asm";
     MetaCoder::MetaCoder() {
         std::cout << "Writing code to " << _outputFileName << "..." << std::endl;
         out.open(_outputFileName);
