@@ -207,7 +207,7 @@ OptVar : VARSY {}
 Body : OptConstDecls OptTypeDecls OptVarDecls Block {}
      ;
 
-Block : BEGINSY StatementList ENDSY {}
+Block : BEGINSY StatementList ENDSY {RSWCOMP::WriteABlock();}
       ;
 
 StatementList : StatementList SCOLONSY Statement {}
@@ -277,10 +277,10 @@ Statement : Assignment {$$ = $1;}
 Assignment : LValue ASSIGNSY Expression {RSWCOMP::Assign($1,$3);}
            ;
 
-IfStatement : IfHead ThenPart ElseIfList ElseClause ENDSY {}
+IfStatement : IfHead ThenPart ElseIfList ElseClause ENDSY {RSWCOMP::FinishIfStmt();}
             ;
 
-IfHead : IFSY Expression {}
+IfHead : IFSY Expression {RSWCOMP::ProcIfStmt($2);}
        ;
 
 ThenPart : THENSY StatementList {}
@@ -290,12 +290,16 @@ ElseIfList : ElseIfList ElseIfHead ThenPart {}
            |{}
            ;
 
-ElseIfHead : ELSEIFSY Expression {}
+ElseIfHead : ElseIfBegin Expression {RSWCOMP::ProcElseIfStmt($2);}
+           ;
+ElseIfBegin : ELSEIFSY {RSWCOMP::PrepElseIfStmt();}
+
+ElseClause : ElseHead StatementList {}
+           | {RSWCOMP::ProcElseStmt();}
            ;
 
-ElseClause : ELSESY StatementList {}
-           | {}
-           ;
+ElseHead : ELSESY {RSWCOMP::ProcElseStmt();}
+         ;
 
 WhileStatement : WhileHead DOSY StatementList ENDSY {}
                ;

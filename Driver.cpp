@@ -31,8 +31,8 @@
 int main(int argc, char* argv[]) {
     Driver driver;
     //Usage of program:
-        //cpslc [-o outfile] infile
-    if ((argc == 3) /*if -o is used and there aren't at least two args afterward...*/||
+        //cpslc infile [-o outfile]
+    if ((argc == 3) /*if -o is used and there isn't at least one arg afterward...*/||
             (argc == 4 && argv[1] != std::string("-o"))/*if 4 args are supplied and the second isn't "-o"...*/||
             argc > 4 /*if there are more than 4 total arguments...*/) {
         std::cout << "ERR: Invalid function call. If you're attempting to invoke the compiler\n"
@@ -45,20 +45,17 @@ int main(int argc, char* argv[]) {
         int result;
         if(argc == 1) {
             driver.sourceFile = "in.cpsl";
-            result = driver.parse(driver.sourceFile);
         }
         else {
+            driver.sourceFile = argv[1];
 
-            driver.sourceFile = argc == 2? argv[1] : argv[3];
-            result = driver.parse(driver.sourceFile);
-            std::cout << argc << std::endl;
-            std::cout << argv[0] << "     " << argv[1] << "     " << argv[2] << "     " << argv[3] << std::endl;
+            if(argc == 4) {
+                RSWCOMP::MetaCoder::_outputFileName = argv[3];
+            }
         }
-
-
+        result = driver.parse(driver.sourceFile);
         return result;
-
-    }catch(std::string e){
+    } catch(std::string e) {
         std::cout << "Compilation error encountered. Error type: " << e << std::endl;
         return 1;
     }
