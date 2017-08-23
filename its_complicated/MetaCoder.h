@@ -19,7 +19,8 @@ namespace RSWCOMP {
 
     void MainBlock();
     void ConstBlock();
-    void dumpToMain();
+    void WriteABlock();
+
 
 
     const std::shared_ptr<Expression> CharExpr(char c);
@@ -53,9 +54,8 @@ namespace RSWCOMP {
     void ProcIfStmt(std::shared_ptr<Expression> exp);
     void FinishIfStmt();
     void ProcElseStmt();
+    void PrepElseIfStmt();
     void ProcElseIfStmt(std::shared_ptr<Expression> exp);
-    void ProcElseIfStmt();
-    void FinishElseIfStmt();
 
     std::shared_ptr<Expression> ExprFromLV(std::shared_ptr<LValue> lv);
     std::shared_ptr<LValue> LVFromID(std::string id);
@@ -86,9 +86,7 @@ namespace RSWCOMP {
         int stackOffset = 0;
         int stringCounter = 0;
         int dataCounter = 0;
-        int numConditionalBlocks = 0;
-        int controlDepth = 0;
-
+        int numConditionalBlocks = -1;
 
     public:
 
@@ -98,17 +96,16 @@ namespace RSWCOMP {
 
         std::stringstream constBlockToWrite;
         std::stringstream mainBlockToWrite;
-        std::stringstream intermediateBlock;
 
-        //TODO: Consider revising this. Depth doesn't need to be taken into account, as \
-                Each nested if statement will simply jump to its appropriate subroutine.
-        //True: Increase nest count
-        //False: Go up a level in the nest
-        void changeBlkScope(bool nestFurther) {
-            controlDepth = nestFurther? controlDepth +1 :
-                                   controlDepth == 0? 0 :controlDepth -1;
-        }
+        std::stringstream intermediateBlock;
+        void dumpToMain();
+
         int getConditionalBlkNum() {return numConditionalBlocks;}
+        int incrConditionalBlkNum() {
+            elseBlockLabels[numConditionalBlocks+1] = 0;
+            return ++numConditionalBlocks;
+        }
+        int exitConditionalLayer();
 
         int topOfGlobal() {
             int i = globalOffset;
@@ -128,6 +125,10 @@ namespace RSWCOMP {
         std::vector<std::string> ids_toWrite;
 
         std::map<int, int> elseBlockLabels;
+        int nextElseBlockLabel() {
+            elseBlockLabels[numConditionalBlocks] += 1;
+            return elseBlockLabels[numConditionalBlocks];
+        }
 
         std::unordered_map<std::string, std::shared_ptr<LValue>> LVs;
         std::unordered_map<std::string, std::shared_ptr<Expression>> constExprs;
