@@ -299,16 +299,18 @@ WhileStatement : WHILESY {RSWCOMP::PrepWhileStmt();} Expression {RSWCOMP::ProcWh
 
 RepeatStatement : REPEATSY {RSWCOMP::PrepRepeatStmt();} StatementList UNTILSY Expression {RSWCOMP::ProcRepeatStmt($5);}
 
-ForStatement : ForHead ToHead DOSY StatementList ENDSY{}
+ForStatement : ForHead ToHead DOSY StatementList ENDSY{RSWCOMP::PrepForStmt(true);}
+             | ForHead DownToHead DOSY StatementList ENDSY{RSWCOMP::PrepForStmt(false);}
              ;
 
-ForHead : FORSY IDENTSY ASSIGNSY Expression {}
+ForHead : FORSY IDENTSY ASSIGNSY Expression {RSWCOMP::ProcForStmt($2, $4);}
         ;
 
-ToHead : TOSY Expression {}
-       | DOWNTOSY Expression {}
+ToHead : TOSY Expression {RSWCOMP::ProcToHead($2);}
        ;
 
+DownToHead  : DOWNTOSY Expression {RSWCOMP::ProcDownToHead($2);}
+            ;
 StopStatement : STOPSY {RSWCOMP::Stop();}
               ;
 

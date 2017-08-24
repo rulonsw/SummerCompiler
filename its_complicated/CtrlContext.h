@@ -14,6 +14,7 @@ namespace RSWCOMP {
         std::map<int, std::vector<int>> depthIdStack;
     public:
         CtrlContext();
+        int getMaxDepth();
         int getIdAtDepth(int i);
         int popIdAtDepth(int i);
         int pushCtrlAtDepth(int i);

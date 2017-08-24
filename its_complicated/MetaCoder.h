@@ -66,8 +66,8 @@ namespace RSWCOMP {
     void ProcRepeatStmt(std::shared_ptr<Expression> exp);
     void PrepRepeatStmt();
 
-    void ProcForStmt(std::shared_ptr<Expression> exp);
-    void PrepForStmt();
+    void ProcForStmt(std::string varId, std::shared_ptr<Expression> exp);
+    void PrepForStmt(bool direction);
     void ProcToHead(std::shared_ptr<Expression> exp);
     void ProcDownToHead(std::shared_ptr<Expression> exp);
 
@@ -108,6 +108,11 @@ namespace RSWCOMP {
 
         CtrlContext whileContext;
         CtrlContext repeatContext;
+        CtrlContext forContext;
+
+        std::vector<std::string> tosToSort;
+        std::vector<std::string> toUps;
+        std::vector<std::string> toDowns;
 
         MetaCoder();
         ~MetaCoder();
@@ -123,8 +128,12 @@ namespace RSWCOMP {
         void shallow() {depth -= 1;}
         void deep() {
             depth +=1;
-            whileContext.deepen();
-            repeatContext.deepen();
+            if (depth >= whileContext.getMaxDepth()){
+                whileContext.deepen();
+                repeatContext.deepen();
+                forContext.deepen();
+            }
+
         }
         int getConditionalBlkNum() {return numConditionalBlocks;}
         int incrConditionalBlkNum() {

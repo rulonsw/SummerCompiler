@@ -12,6 +12,7 @@ namespace RSWCOMP {
 
     }
 
+    int CtrlContext::getMaxDepth() {return maxDepth;}
     int CtrlContext::popIdAtDepth(int i) {
         if (i > maxDepth) throw ("pop index cannot be larger than maxDepth.");
         int ret = depthIdStack[i].back();

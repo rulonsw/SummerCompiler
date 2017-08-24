@@ -199,16 +199,76 @@ namespace RSWCOMP {
         curr->mainBlockToWrite << "repeatNum" << curr->repeatContext.pushCtrlAtDepth(depth) << "_depth" << depth << ":" << std::endl;
     }
 
-    void ProcForStmt(std::shared_ptr<Expression> exp) {
+    void ProcForStmt(std::string varId, std::shared_ptr<Expression> exp) {
+        auto curr = MetaCoder::curr();
+
+        auto lv = LVFromID(varId);
+        Assign(lv, exp);
+        curr->tosToSort.push_back(varId);
+
+        curr->dumpToMain();
 
     }
-    void PrepForStmt() {
+    void PrepForStmt(bool direction) {
+        //True: To
+        //False: DownTo
+        auto curr = MetaCoder::curr();
+        curr->dumpToMain();
+
+        auto ForIdToPrep = direction? curr->toUps.back() : curr->toDowns.back();
+        auto lvTemp = LVFromID(ForIdToPrep);
+
+        if (direction) {
+            curr->toUps.pop_back();
+            Assign(lvTemp, SuccExpr(ExprFromLV(lvTemp)));
+        }
+        else {
+            curr->toDowns.pop_back();
+            Assign(lvTemp, PredExpr(ExprFromLV(lvTemp)));
+        }
+        curr->dumpToMain();
+
+        curr->mainBlockToWrite << "j forNum" << curr->forContext.getIdAtDepth(curr->getDepth()) <<"_depth" << curr->getDepth() << std::endl;
+        curr->mainBlockToWrite << "forNum" << curr->forContext.getIdAtDepth(curr->getDepth()) << "_depth" << curr->getDepth() << "_end:" << std::endl;
+        curr->shallow();
 
     }
     void ProcToHead(std::shared_ptr<Expression> exp) {
+        auto curr = MetaCoder::curr();
+        curr->deep();
+        auto depth = curr->getDepth();
+        curr->mainBlockToWrite << "forNum" << curr->forContext.pushCtrlAtDepth(depth) << "_depth" << depth << ":" << std::endl;
+        auto addToUp = curr->tosToSort.back(); //CLion throws an error here; alas, it is for naught.
+        //Seems like the issue related to this ticket in particular: https://youtrack.jetbrains.com/issue/CPP-8163
+        curr->tosToSort.pop_back();
+        curr->toUps.push_back(addToUp);
+
+        auto compReg1 = std::const_pointer_cast<Expression>(ExprFromLV(LVFromID(addToUp)));
+        auto compReg1Name = compReg1->getRegister()->regName;
+        auto compReg2 = exp->getRegister()->regName;
+        curr->dumpToMain();
+
+        curr->mainBlockToWrite << "beq " << compReg1Name << ", " << compReg2 << ", forNum" << curr->forContext.getIdAtDepth(depth)<< "_depth" << depth <<"_end" << std::endl;
+
 
     }
     void ProcDownToHead(std::shared_ptr<Expression> exp) {
+
+        auto curr = MetaCoder::curr();
+        curr->deep();
+        auto depth = curr->getDepth();
+        curr->mainBlockToWrite << "forNum" << curr->forContext.pushCtrlAtDepth(depth) << "_depth" << depth << ":" << std::endl;
+        auto addToDown = curr->tosToSort.back(); //CLion throws an error here; alas, it is for naught.
+        //Seems like the issue related to this ticket in particular: https://youtrack.jetbrains.com/issue/CPP-8163
+
+        curr->tosToSort.pop_back();
+        curr->toDowns.push_back(addToDown);
+        auto compReg1 = std::const_pointer_cast<Expression>(ExprFromLV(LVFromID(addToDown)));
+        auto compReg1Name = compReg1->getRegister()->regName;
+        auto compReg2 = exp->getRegister()->regName;
+        curr->dumpToMain();
+
+        curr->mainBlockToWrite << "beq " << compReg1Name << ", " << compReg2 << ", forNum" << curr->forContext.getIdAtDepth(depth)<< "_depth" << depth <<"_end" << std::endl;
 
     }
 
