@@ -127,6 +127,7 @@ namespace RSWCOMP {
         curr->out << "li $v0, 10" << std::endl;
         curr->out << "syscall" << std::endl;
     }
+    /*****IF/ELSE*****/
     void ProcIfStmt(std::shared_ptr<Expression> expr) {
         auto curr = MetaCoder::curr();
         curr->dumpToMain();
@@ -154,6 +155,121 @@ namespace RSWCOMP {
         curr->dumpToMain();
         curr->mainBlockToWrite << "j elseBlock_" << curr->getConditionalBlkNum() << "_end" << std::endl;
         curr->mainBlockToWrite << "elseBlock_" << curr->getConditionalBlkNum() << "_num" << curr->elseBlockLabels[curr->getConditionalBlkNum()] << ":" << std::endl;
+    }
+
+    /*****LOOPS*****/
+    void ProcWhileStmt(std::shared_ptr<Expression> exp) {
+        auto curr = MetaCoder::curr();
+        auto depth = curr->getDepth();
+        curr->dumpToMain();
+        curr->mainBlockToWrite << "\tbeq " << exp->getRegister()->regName << ", $0, whileNum" << curr->whileContext.getIdAtDepth(depth) << "_depth" << curr->getDepth() << "_end" << std::endl;
+    }
+    void PrepWhileStmt() {
+        auto curr= MetaCoder::curr();
+        curr->deep();
+        auto depth = curr->getDepth();
+        curr->dumpToMain();
+        curr->mainBlockToWrite << "whileNum" << curr->whileContext.pushCtrlAtDepth(depth) << "_depth" << depth <<":" << std::endl;
+    }
+    void FinishWhileStmt() {
+        auto curr = MetaCoder::curr();
+        auto depth = curr->getDepth();
+
+        curr->dumpToMain();
+        curr->mainBlockToWrite << "j whileNum" << curr->whileContext.getIdAtDepth(depth) << "_depth" << depth <<std::endl;
+        curr->mainBlockToWrite << "whileNum" << curr->whileContext.getIdAtDepth(depth) <<"_depth" << depth << "_end:" << std::endl;
+        curr->shallow();
+    }
+
+    void ProcRepeatStmt(std::shared_ptr<Expression> exp) {
+        auto curr = MetaCoder::curr();
+        auto depth = curr->getDepth();
+        curr->dumpToMain();
+        curr->mainBlockToWrite << "\tbne " << exp->getRegister()->regName << ", $0, repeatNum" << curr->repeatContext.getIdAtDepth(depth) << "_depth" << depth <<"_end"<< std::endl;
+        curr->mainBlockToWrite << "j repeatNum" << curr->repeatContext.getIdAtDepth(depth) << "_depth" << depth << std::endl;
+        curr->mainBlockToWrite << "repeatNum" << curr->repeatContext.getIdAtDepth(depth) << "_depth" << depth << "_end:" << std::endl;
+
+        curr->shallow();
+    }
+    void PrepRepeatStmt() {
+        auto curr = MetaCoder::curr();
+        curr->deep();
+        auto depth = curr->getDepth();
+        curr->dumpToMain();
+        curr->mainBlockToWrite << "repeatNum" << curr->repeatContext.pushCtrlAtDepth(depth) << "_depth" << depth << ":" << std::endl;
+    }
+
+    void ProcForStmt(std::string varId, std::shared_ptr<Expression> exp) {
+        auto curr = MetaCoder::curr();
+
+        auto lv = LVFromID(varId);
+        Assign(lv, exp);
+        curr->tosToSort.push_back(varId);
+
+        curr->dumpToMain();
+
+    }
+    void PrepForStmt(bool direction) {
+        //True: To
+        //False: DownTo
+        auto curr = MetaCoder::curr();
+        curr->dumpToMain();
+
+        auto ForIdToPrep = direction? curr->toUps.back() : curr->toDowns.back();
+        auto lvTemp = LVFromID(ForIdToPrep);
+
+        if (direction) {
+            curr->toUps.pop_back();
+            Assign(lvTemp, SuccExpr(ExprFromLV(lvTemp)));
+        }
+        else {
+            curr->toDowns.pop_back();
+            Assign(lvTemp, PredExpr(ExprFromLV(lvTemp)));
+        }
+        curr->dumpToMain();
+
+        curr->mainBlockToWrite << "j forNum" << curr->forContext.getIdAtDepth(curr->getDepth()) <<"_depth" << curr->getDepth() << std::endl;
+        curr->mainBlockToWrite << "forNum" << curr->forContext.getIdAtDepth(curr->getDepth()) << "_depth" << curr->getDepth() << "_end:" << std::endl;
+        curr->shallow();
+
+    }
+    void ProcToHead(std::shared_ptr<Expression> exp) {
+        auto curr = MetaCoder::curr();
+        curr->deep();
+        auto depth = curr->getDepth();
+        curr->mainBlockToWrite << "forNum" << curr->forContext.pushCtrlAtDepth(depth) << "_depth" << depth << ":" << std::endl;
+        auto addToUp = curr->tosToSort.back(); //CLion throws an error here; alas, it is for naught.
+        //Seems like the issue related to this ticket in particular: https://youtrack.jetbrains.com/issue/CPP-8163
+        curr->tosToSort.pop_back();
+        curr->toUps.push_back(addToUp);
+
+        auto compReg1 = std::const_pointer_cast<Expression>(ExprFromLV(LVFromID(addToUp)));
+        auto compReg1Name = compReg1->getRegister()->regName;
+        auto compReg2 = exp->getRegister()->regName;
+        curr->dumpToMain();
+
+        curr->mainBlockToWrite << "beq " << compReg1Name << ", " << compReg2 << ", forNum" << curr->forContext.getIdAtDepth(depth)<< "_depth" << depth <<"_end" << std::endl;
+
+
+    }
+    void ProcDownToHead(std::shared_ptr<Expression> exp) {
+
+        auto curr = MetaCoder::curr();
+        curr->deep();
+        auto depth = curr->getDepth();
+        curr->mainBlockToWrite << "forNum" << curr->forContext.pushCtrlAtDepth(depth) << "_depth" << depth << ":" << std::endl;
+        auto addToDown = curr->tosToSort.back(); //CLion throws an error here; alas, it is for naught.
+        //Seems like the issue related to this ticket in particular: https://youtrack.jetbrains.com/issue/CPP-8163
+
+        curr->tosToSort.pop_back();
+        curr->toDowns.push_back(addToDown);
+        auto compReg1 = std::const_pointer_cast<Expression>(ExprFromLV(LVFromID(addToDown)));
+        auto compReg1Name = compReg1->getRegister()->regName;
+        auto compReg2 = exp->getRegister()->regName;
+        curr->dumpToMain();
+
+        curr->mainBlockToWrite << "beq " << compReg1Name << ", " << compReg2 << ", forNum" << curr->forContext.getIdAtDepth(depth)<< "_depth" << depth <<"_end" << std::endl;
+
     }
 
 /*****CASTING/VALUE OPERATIONS*****/
@@ -238,14 +354,20 @@ namespace RSWCOMP {
     const std::shared_ptr<Expression> AndExpr(std::shared_ptr<Expression> e1, std::shared_ptr<Expression> e2) {
         auto curr = MetaCoder::curr();
         auto result_register = Register::consumeRegister();
-        curr->intermediateBlock << "\tand " << result_register->regName << ", " << e1->getRegister()->regName << "," << e2->getRegister()->regName << std::endl;
+        auto gottenReg1 = e1->getRegister()->regName;
+        auto gottenReg2 = e2->getRegister()->regName;
+        
+        curr->intermediateBlock << "\tand " << result_register->regName << ", " << gottenReg1 << "," << gottenReg2 << std::endl;
 
         return std::make_shared<Expression>(result_register, e1->containedDataType());
     }
     const std::shared_ptr<Expression> OrExpr(std::shared_ptr<Expression> e1, std::shared_ptr<Expression> e2) {
         auto curr = MetaCoder::curr();
         auto result_register = Register::consumeRegister();
-        curr->intermediateBlock << "\tor " << result_register->regName << ", " << e1->getRegister()->regName << "," << e2->getRegister()->regName << std::endl;
+        auto gottenReg1 = e1->getRegister()->regName;
+        auto gottenReg2 = e2->getRegister()->regName;
+        
+        curr->intermediateBlock << "\tor " << result_register->regName << ", " << gottenReg1 << "," << gottenReg2 << std::endl;
 
         return std::make_shared<Expression>(result_register, e1->containedDataType());
     }
@@ -262,14 +384,20 @@ namespace RSWCOMP {
     const std::shared_ptr<Expression> AddExpr(std::shared_ptr<Expression> e1, std::shared_ptr<Expression> e2) {
         auto curr = MetaCoder::curr();
         auto result_register = Register::consumeRegister();
-        curr->intermediateBlock <<"\tadd " << result_register->regName << ", " << e1->getRegister()->regName << "," << e2->getRegister()->regName << std::endl;
+        auto gottenReg1 = e1->getRegister()->regName;
+        auto gottenReg2 = e2->getRegister()->regName;
+        
+        curr->intermediateBlock <<"\tadd " << result_register->regName << ", " << gottenReg1 << "," << gottenReg2 << std::endl;
 
         return std::make_shared<Expression>(result_register, e1->containedDataType());
     }
     const std::shared_ptr<Expression> SubExpr(std::shared_ptr<Expression> e1, std::shared_ptr<Expression> e2) {
         auto curr = MetaCoder::curr();
         auto result_register = Register::consumeRegister();
-        curr->intermediateBlock <<"\tsub " << result_register->regName << ", " << e1->getRegister()->regName << "," << e2->getRegister() << std::endl;
+        auto gottenReg1 = e1->getRegister()->regName;
+        auto gottenReg2 = e2->getRegister()->regName;
+        
+        curr->intermediateBlock <<"\tsub " << result_register->regName << ", " << gottenReg1 << "," << gottenReg2 << std::endl;
 
         return std::make_shared<Expression>(result_register, e1->containedDataType());
     }
@@ -277,13 +405,19 @@ namespace RSWCOMP {
     const std::shared_ptr<Expression> MultExpr(std::shared_ptr<Expression> e1, std::shared_ptr<Expression> e2) {
         auto curr = MetaCoder::curr();
         auto result_register = Register::consumeRegister();
-        curr->intermediateBlock <<"\tmul " <<result_register->regName << "," << e1->getRegister()->regName << "," << e2->getRegister()->regName << std::endl;
+        auto gottenReg1 = e1->getRegister()->regName;
+        auto gottenReg2 = e2->getRegister()->regName;
+        
+        curr->intermediateBlock <<"\tmul " <<result_register->regName << "," << gottenReg1 << "," << gottenReg2 << std::endl;
 
         return std::make_shared<Expression>(result_register, e1->containedDataType());
     }
     const std::shared_ptr<Expression> DivExpr(std::shared_ptr<Expression> e1, std::shared_ptr<Expression> e2) {
         auto curr = MetaCoder::curr();
         auto result_register = Register::consumeRegister();
+        auto gottenReg1 = e1->getRegister()->regName;
+        auto gottenReg2 = e2->getRegister()->regName;
+        
         curr->intermediateBlock <<"\tdiv " <<result_register->regName << "," << e1->getRegister() << "," << e2->getRegister() << std::endl;
 
         return std::make_shared<Expression>(result_register, e1->containedDataType());
@@ -291,16 +425,20 @@ namespace RSWCOMP {
     const std::shared_ptr<Expression> ModExpr(std::shared_ptr<Expression> e1, std::shared_ptr<Expression> e2) {
         auto curr = MetaCoder::curr();
         auto result_register = Register::consumeRegister();
+        auto gottenReg1 = e1->getRegister()->regName;
+        auto gottenReg2 = e2->getRegister()->regName;
 
-        curr->intermediateBlock << "\tdiv " << e1->getRegister()->regName << "," << e2->getRegister()-> regName << "\n\tmfhi " << result_register->regName << std::endl;
+        curr->intermediateBlock << "\tdiv " << gottenReg1 << "," << e2->getRegister()-> regName << "\n\tmfhi " << result_register->regName << std::endl;
 
         return std::make_shared<Expression>(result_register, e1->containedDataType());
     }
     const std::shared_ptr<Expression> UnMinusExpr(std::shared_ptr<Expression> e) {
         auto curr = MetaCoder::curr();
         auto result_register = Register::consumeRegister();
+        auto gottenReg = e->getRegister()->regName;
+        
 
-        curr->intermediateBlock << "\tneg " << result_register->regName << "," << e->getRegister()->regName << std::endl;
+        curr->intermediateBlock << "\tneg " << result_register->regName << "," << gottenReg << std::endl;
 
         return std::make_shared<Expression>(result_register, e->containedDataType());
     }
@@ -318,8 +456,10 @@ namespace RSWCOMP {
     const std::shared_ptr<Expression> NeqExpr(std::shared_ptr<Expression> e1, std::shared_ptr<Expression> e2) {
         auto curr = MetaCoder::curr();
         auto result_register = Register::consumeRegister();
+        auto gottenReg1 = e1->getRegister()->regName;
+        auto gottenReg2 = e2->getRegister()->regName;
 
-        curr->intermediateBlock << "\tsne " << result_register->regName << "," << e1->getRegister()->regName << "," << e2->getRegister()->regName << std::endl;
+        curr->intermediateBlock << "\tsne " << result_register->regName << "," << gottenReg1 << "," << gottenReg2 << std::endl;
 
         return std::make_shared<Expression>(result_register, e1->containedDataType());
     }
@@ -327,32 +467,40 @@ namespace RSWCOMP {
     const std::shared_ptr<Expression> GteExpr(std::shared_ptr<Expression> e1, std::shared_ptr<Expression> e2) {
         auto curr = MetaCoder::curr();
         auto result_register = Register::consumeRegister();
+        auto gottenReg1 = e1->getRegister()->regName;
+        auto gottenReg2 = e2->getRegister()->regName;
 
-        curr->intermediateBlock << "\tsge " << result_register->regName << "," << e1->getRegister()->regName << "," << e2->getRegister()->regName << std::endl;
+        curr->intermediateBlock << "\tsge " << result_register->regName << "," << gottenReg1 << "," << gottenReg2 << std::endl;
 
         return std::make_shared<Expression>(result_register, e1->containedDataType());
     }
     const std::shared_ptr<Expression> GtExpr(std::shared_ptr<Expression> e1, std::shared_ptr<Expression> e2) {
         auto curr = MetaCoder::curr();
         auto result_register = Register::consumeRegister();
+        auto gottenReg1 = e1->getRegister()->regName;
+        auto gottenReg2 = e2->getRegister()->regName;
 
-        curr->intermediateBlock << "\tsgt " << result_register->regName << "," << e1->getRegister()->regName << "," << e2->getRegister()->regName << std::endl;
+        curr->intermediateBlock << "\tsgt " << result_register->regName << "," << gottenReg1 << "," << gottenReg2 << std::endl;
 
         return std::make_shared<Expression>(result_register, e1->containedDataType());
     }
     const std::shared_ptr<Expression> LteExpr(std::shared_ptr<Expression> e1, std::shared_ptr<Expression> e2) {
         auto curr = MetaCoder::curr();
         auto result_register = Register::consumeRegister();
+        auto gottenReg1 = e1->getRegister()->regName;
+        auto gottenReg2 = e2->getRegister()->regName;
 
-        curr->intermediateBlock << "\tsle " << result_register->regName << "," << e1->getRegister()->regName << "," << e2->getRegister()->regName << std::endl;
+        curr->intermediateBlock << "\tsle " << result_register->regName << "," << gottenReg1 << "," << gottenReg2 << std::endl;
 
         return std::make_shared<Expression>(result_register, e1->containedDataType());
     }
     const std::shared_ptr<Expression> LtExpr(std::shared_ptr<Expression> e1, std::shared_ptr<Expression> e2) {
         auto curr = MetaCoder::curr();
         auto result_register = Register::consumeRegister();
+        auto gottenReg1 = e1->getRegister()->regName;
+        auto gottenReg2 = e2->getRegister()->regName;
 
-        curr->intermediateBlock << "\tslt " << result_register->regName << "," << e1->getRegister()->regName << "," << e2->getRegister()->regName << std::endl;
+        curr->intermediateBlock << "\tslt " << result_register->regName << "," << gottenReg1 << "," << gottenReg2 << std::endl;
 
         return std::make_shared<Expression>(result_register, e1->containedDataType());
     }
