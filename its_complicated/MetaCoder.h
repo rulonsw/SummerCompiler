@@ -8,16 +8,21 @@
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <map>
 #include <fstream>
 #include <its_complicated/components/Expression.h>
 #include <vector>
 #include <sstream>
 #include "its_complicated/components/LValue.h"
+#include "its_complicated/CtrlContext.h"
 
 namespace RSWCOMP {
 
     void MainBlock();
     void ConstBlock();
+    void WriteABlock();
+
+
 
     const std::shared_ptr<Expression> CharExpr(char c);
     const std::shared_ptr<Expression> IntExpr(int i);
@@ -45,8 +50,26 @@ namespace RSWCOMP {
     Type LookupType(std::string tName); //To be implemented...
 
     void Assign(std::shared_ptr<LValue> lv, std::shared_ptr<Expression> exp);
-
+/*****CONTROL FLOW*****/
     void Stop();
+/*****IF/ELSE*****/
+    void ProcIfStmt(std::shared_ptr<Expression> exp);
+    void FinishIfStmt();
+    void ProcElseStmt();
+    void PrepElseIfStmt();
+    void ProcElseIfStmt(std::shared_ptr<Expression> exp);
+/*****LOOPS*****/
+    void ProcWhileStmt(std::shared_ptr<Expression> exp);
+    void PrepWhileStmt();
+    void FinishWhileStmt();
+
+    void ProcRepeatStmt(std::shared_ptr<Expression> exp);
+    void PrepRepeatStmt();
+
+    void ProcForStmt(std::string varId, std::shared_ptr<Expression> exp);
+    void PrepForStmt(bool direction);
+    void ProcToHead(std::shared_ptr<Expression> exp);
+    void ProcDownToHead(std::shared_ptr<Expression> exp);
 
     std::shared_ptr<Expression> ExprFromLV(std::shared_ptr<LValue> lv);
     std::shared_ptr<LValue> LVFromID(std::string id);
@@ -73,20 +96,54 @@ namespace RSWCOMP {
 
     class MetaCoder {
         static std::shared_ptr<MetaCoder> _content;
-        std::string _outputFileName = "out.asm";
         int globalOffset =  0;
         int stackOffset = 0;
         int stringCounter = 0;
         int dataCounter = 0;
 
+        int numConditionalBlocks = -1;
+        int depth = 0;
 
     public:
+
+        CtrlContext whileContext;
+        CtrlContext repeatContext;
+        CtrlContext forContext;
+
+        std::vector<std::string> tosToSort;
+        std::vector<std::string> toUps;
+        std::vector<std::string> toDowns;
+
         MetaCoder();
         ~MetaCoder();
         std::ofstream out;
 
         std::stringstream constBlockToWrite;
         std::stringstream mainBlockToWrite;
+
+        std::stringstream intermediateBlock;
+        void dumpToMain();
+
+        int getDepth() {return depth;}
+        void shallow() {depth -= 1;}
+        void deep() {
+            depth +=1;
+            if (depth >= whileContext.getMaxDepth()){
+                whileContext.deepen();
+                repeatContext.deepen();
+                forContext.deepen();
+            }
+
+        }
+        int getConditionalBlkNum() {return numConditionalBlocks;}
+        int incrConditionalBlkNum() {
+            elseBlockLabels[numConditionalBlocks+1] = 0;
+            return ++numConditionalBlocks;
+        }
+        int exitConditionalLayer();
+
+//        int getNumWhileBlks() {return numWhileBlocks;}
+//        int incrWhileBlks() {return ++numWhileBlocks;}
 
         int topOfGlobal() {
             int i = globalOffset;
@@ -99,11 +156,21 @@ namespace RSWCOMP {
             globalOffset += i;
             return j;
         }
+
+        static std::string _outputFileName;
         static std::shared_ptr<MetaCoder> curr();
+
         std::vector<std::string> ids_toWrite;
-        std::vector<std::string> constNamesSeen;
+
+        std::map<int, int> elseBlockLabels;
+        int nextElseBlockLabel() {
+            elseBlockLabels[numConditionalBlocks] += 1;
+            return elseBlockLabels[numConditionalBlocks];
+        }
+
         std::unordered_map<std::string, std::shared_ptr<LValue>> LVs;
         std::unordered_map<std::string, std::shared_ptr<Expression>> constExprs;
+
         int nextStringCtr() {
             int ret = stringCounter;
             stringCounter++;
@@ -118,9 +185,6 @@ namespace RSWCOMP {
         }
 
     };
-
-    static std::shared_ptr<MetaCoder> cntxt;
-
 }
 
 

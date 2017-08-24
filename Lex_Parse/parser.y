@@ -207,7 +207,7 @@ OptVar : VARSY {}
 Body : OptConstDecls OptTypeDecls OptVarDecls Block {}
      ;
 
-Block : BEGINSY StatementList ENDSY {}
+Block : BEGINSY StatementList ENDSY {RSWCOMP::WriteABlock();}
       ;
 
 StatementList : StatementList SCOLONSY Statement {}
@@ -277,11 +277,8 @@ Statement : Assignment {$$ = $1;}
 Assignment : LValue ASSIGNSY Expression {RSWCOMP::Assign($1,$3);}
            ;
 
-IfStatement : IfHead ThenPart ElseIfList ElseClause ENDSY {}
+IfStatement : IFSY Expression {RSWCOMP::ProcIfStmt($2);} ThenPart ElseIfList ElseClause ENDSY {RSWCOMP::FinishIfStmt();}
             ;
-
-IfHead : IFSY Expression {}
-       ;
 
 ThenPart : THENSY StatementList {}
          ;
@@ -290,31 +287,30 @@ ElseIfList : ElseIfList ElseIfHead ThenPart {}
            |{}
            ;
 
-ElseIfHead : ELSEIFSY Expression {}
+ElseIfHead : ELSEIFSY {RSWCOMP::PrepElseIfStmt();} Expression {RSWCOMP::ProcElseIfStmt($3);}
            ;
 
-ElseClause : ELSESY StatementList {}
-           | {}
+ElseClause : ELSESY {RSWCOMP::ProcElseStmt();} StatementList {}
+           | {RSWCOMP::ProcElseStmt();}
            ;
 
-WhileStatement : WhileHead DOSY StatementList ENDSY {}
+WhileStatement : WHILESY {RSWCOMP::PrepWhileStmt();} Expression {RSWCOMP::ProcWhileStmt($3);} DOSY StatementList ENDSY {RSWCOMP::FinishWhileStmt();}
                ;
 
-WhileHead : WHILESY Expression {}
-          ;
+RepeatStatement : REPEATSY {RSWCOMP::PrepRepeatStmt();} StatementList UNTILSY Expression {RSWCOMP::ProcRepeatStmt($5);}
 
-RepeatStatement : REPEATSY StatementList UNTILSY Expression {}
-
-ForStatement : ForHead ToHead DOSY StatementList ENDSY{}
+ForStatement : ForHead ToHead DOSY StatementList ENDSY{RSWCOMP::PrepForStmt(true);}
+             | ForHead DownToHead DOSY StatementList ENDSY{RSWCOMP::PrepForStmt(false);}
              ;
 
-ForHead : FORSY IDENTSY ASSIGNSY Expression {}
+ForHead : FORSY IDENTSY ASSIGNSY Expression {RSWCOMP::ProcForStmt($2, $4);}
         ;
 
-ToHead : TOSY Expression {}
-       | DOWNTOSY Expression {}
+ToHead : TOSY Expression {RSWCOMP::ProcToHead($2);}
        ;
 
+DownToHead  : DOWNTOSY Expression {RSWCOMP::ProcDownToHead($2);}
+            ;
 StopStatement : STOPSY {RSWCOMP::Stop();}
               ;
 

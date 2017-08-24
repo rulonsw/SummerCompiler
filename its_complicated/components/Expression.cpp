@@ -21,7 +21,7 @@ namespace RSWCOMP {
         auto consumed_reg = Register::consumeRegister();
         if (exprId == "UNSET_ID" || curr->constExprs.find(exprId) == curr->constExprs.end()) {
             exprType = memoryLocation;
-            curr->mainBlockToWrite << "\tli " << consumed_reg->regName << "," << numericValue << std::endl;
+            curr->intermediateBlock << "\tli " << consumed_reg->regName << "," << numericValue << std::endl;
 
             numericValue = INT32_MIN;
             return consumed_reg;
@@ -29,10 +29,10 @@ namespace RSWCOMP {
         else {
             exprType = memoryLocation;
             if(containsDataType.t_name == T_STRING) {
-                curr->mainBlockToWrite << "\tmove " << consumed_reg->regName << ", " << exprId << std::endl;
+                curr->intermediateBlock << "\tmove " << consumed_reg->regName << ", " << exprId << std::endl;
             }
             else {
-                curr->mainBlockToWrite << "\tlw " << consumed_reg->regName << "," << exprId << std::endl;
+                curr->intermediateBlock << "\tlw " << consumed_reg->regName << "," << exprId << std::endl;
             }
             return consumed_reg;
         }
