@@ -107,6 +107,7 @@ namespace RSWCOMP {
     public:
 
         CtrlContext whileContext;
+        CtrlContext repeatContext;
 
         MetaCoder();
         ~MetaCoder();
@@ -120,7 +121,11 @@ namespace RSWCOMP {
 
         int getDepth() {return depth;}
         void shallow() {depth -= 1;}
-        void deep() {depth +=1;}
+        void deep() {
+            depth +=1;
+            whileContext.deepen();
+            repeatContext.deepen();
+        }
         int getConditionalBlkNum() {return numConditionalBlocks;}
         int incrConditionalBlkNum() {
             elseBlockLabels[numConditionalBlocks+1] = 0;

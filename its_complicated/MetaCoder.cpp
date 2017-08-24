@@ -167,27 +167,36 @@ namespace RSWCOMP {
     void PrepWhileStmt() {
         auto curr= MetaCoder::curr();
         curr->deep();
-        curr->whileContext.deepen();
         auto depth = curr->getDepth();
         curr->dumpToMain();
         curr->mainBlockToWrite << "whileNum" << curr->whileContext.pushCtrlAtDepth(depth) << "_depth" << depth <<":" << std::endl;
     }
     void FinishWhileStmt() {
         auto curr = MetaCoder::curr();
-
         auto depth = curr->getDepth();
 
         curr->dumpToMain();
-        curr->mainBlockToWrite << "\tj whileNum" << curr->whileContext.getIdAtDepth(depth) << "_depth" << depth <<std::endl;
+        curr->mainBlockToWrite << "j whileNum" << curr->whileContext.getIdAtDepth(depth) << "_depth" << depth <<std::endl;
         curr->mainBlockToWrite << "whileNum" << curr->whileContext.getIdAtDepth(depth) <<"_depth" << depth << "_end:" << std::endl;
         curr->shallow();
     }
 
     void ProcRepeatStmt(std::shared_ptr<Expression> exp) {
+        auto curr = MetaCoder::curr();
+        auto depth = curr->getDepth();
+        curr->dumpToMain();
+        curr->mainBlockToWrite << "\tbne " << exp->getRegister()->regName << ", $0, repeatNum" << curr->repeatContext.getIdAtDepth(depth) << "_depth" << depth <<"_end"<< std::endl;
+        curr->mainBlockToWrite << "j repeatNum" << curr->repeatContext.getIdAtDepth(depth) << "_depth" << depth << std::endl;
+        curr->mainBlockToWrite << "repeatNum" << curr->repeatContext.getIdAtDepth(depth) << "_depth" << depth << "_end:" << std::endl;
 
+        curr->shallow();
     }
     void PrepRepeatStmt() {
-
+        auto curr = MetaCoder::curr();
+        curr->deep();
+        auto depth = curr->getDepth();
+        curr->dumpToMain();
+        curr->mainBlockToWrite << "repeatNum" << curr->repeatContext.pushCtrlAtDepth(depth) << "_depth" << depth << ":" << std::endl;
     }
 
     void ProcForStmt(std::shared_ptr<Expression> exp) {
