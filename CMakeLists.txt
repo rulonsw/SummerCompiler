@@ -34,7 +34,7 @@ set(code_src
         ${CMAKE_CURRENT_SOURCE_DIR}/Driver.h
         ${CMAKE_CURRENT_SOURCE_DIR}/Driver.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/its_complicated/components/Type.h
-        )
+        its_complicated/CtrlContext.cpp its_complicated/CtrlContext.h)
 
 source_group("interpreter" FILES ${code_src})
 set(main_srcs Driver.cpp Driver.h)

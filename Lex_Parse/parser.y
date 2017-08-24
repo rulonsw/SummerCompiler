@@ -294,11 +294,8 @@ ElseClause : ELSESY {RSWCOMP::ProcElseStmt();} StatementList {}
            | {RSWCOMP::ProcElseStmt();}
            ;
 
-WhileStatement : WhileHead DOSY StatementList ENDSY {}
+WhileStatement : WHILESY {RSWCOMP::PrepWhileStmt();} Expression {RSWCOMP::ProcWhileStmt($3);} DOSY StatementList ENDSY {RSWCOMP::FinishWhileStmt();}
                ;
-
-WhileHead : WHILESY Expression {}
-          ;
 
 RepeatStatement : REPEATSY StatementList UNTILSY Expression {}
 

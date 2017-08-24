@@ -14,6 +14,7 @@
 #include <vector>
 #include <sstream>
 #include "its_complicated/components/LValue.h"
+#include "its_complicated/CtrlContext.h"
 
 namespace RSWCOMP {
 
@@ -51,11 +52,24 @@ namespace RSWCOMP {
     void Assign(std::shared_ptr<LValue> lv, std::shared_ptr<Expression> exp);
 /*****CONTROL FLOW*****/
     void Stop();
+/*****IF/ELSE*****/
     void ProcIfStmt(std::shared_ptr<Expression> exp);
     void FinishIfStmt();
     void ProcElseStmt();
     void PrepElseIfStmt();
     void ProcElseIfStmt(std::shared_ptr<Expression> exp);
+/*****LOOPS*****/
+    void ProcWhileStmt(std::shared_ptr<Expression> exp);
+    void PrepWhileStmt();
+    void FinishWhileStmt();
+
+    void ProcRepeatStmt(std::shared_ptr<Expression> exp);
+    void PrepRepeatStmt();
+
+    void ProcForStmt(std::shared_ptr<Expression> exp);
+    void PrepForStmt();
+    void ProcToHead(std::shared_ptr<Expression> exp);
+    void ProcDownToHead(std::shared_ptr<Expression> exp);
 
     std::shared_ptr<Expression> ExprFromLV(std::shared_ptr<LValue> lv);
     std::shared_ptr<LValue> LVFromID(std::string id);
@@ -86,9 +100,13 @@ namespace RSWCOMP {
         int stackOffset = 0;
         int stringCounter = 0;
         int dataCounter = 0;
+
         int numConditionalBlocks = -1;
+        int depth = 0;
 
     public:
+
+        CtrlContext whileContext;
 
         MetaCoder();
         ~MetaCoder();
@@ -100,12 +118,18 @@ namespace RSWCOMP {
         std::stringstream intermediateBlock;
         void dumpToMain();
 
+        int getDepth() {return depth;}
+        void shallow() {depth -= 1;}
+        void deep() {depth +=1;}
         int getConditionalBlkNum() {return numConditionalBlocks;}
         int incrConditionalBlkNum() {
             elseBlockLabels[numConditionalBlocks+1] = 0;
             return ++numConditionalBlocks;
         }
         int exitConditionalLayer();
+
+//        int getNumWhileBlks() {return numWhileBlocks;}
+//        int incrWhileBlks() {return ++numWhileBlocks;}
 
         int topOfGlobal() {
             int i = globalOffset;
