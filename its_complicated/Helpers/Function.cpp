@@ -83,7 +83,8 @@ namespace RSWCOMP {
             int j = 0;
             for(auto i : args.argTypes) {
                 auto localLV = LValue();
-                localLV.idString, localLV.cpsl_refname = args.argNames.at(j) + "_local";
+                localLV.idString = args.argNames.at(j) + "_local";
+                localLV.cpsl_refname = args.argNames.at(j) + "_local";
                 localLV.type = i;
                 localLV.lvi = STACK_REF;
                 localLV.stackOffset = (i.memBlkSize * -1 ) + retLV.stackOffset; //stackOffset is already negative for retLV
@@ -92,7 +93,6 @@ namespace RSWCOMP {
                 j++;
             }
         }
-
     }
 
     const std::shared_ptr<Expression> Function::Call(std::string name, CallerArgs args) {
@@ -127,8 +127,6 @@ namespace RSWCOMP {
         }
 
         // Don't forget to bring along the arguments list, too
-
-        //TODO: Catch these crazy things on the other end of whatever function is being called, with a compiler-side function
         j=0;    //Thanks, j
         for(int i = 0; i < args.numExpressions; i++) {
             j += args.passedArguments[i]->containedDataType().memBlkSize;
@@ -142,7 +140,7 @@ namespace RSWCOMP {
         curr->intermediateBlock << "jal " << name << std::endl;
 
 
-        //TODO: Load up all the registers once again
+        // Load up all the registers once again
         curr->intermediateBlock <<"\tlw $ra, 4($sp)" << std::endl;
 
         j=0;

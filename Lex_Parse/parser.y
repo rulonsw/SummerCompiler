@@ -174,16 +174,28 @@ PFDecls : PFDecls ProcedureDecl
         |
         ;
 
-ProcedureDecl : PSignature SCOLONSY FORWARDSY SCOLONSY {$1.isProcedure = true; $1.isFwdDeclaration = true;}
-              | PSignature SCOLONSY Body SCOLONSY {$1.isProcedure = true;}
-				    	;
+ProcedureDecl : PSignature SCOLONSY FORWARDSY SCOLONSY {
+                    $1.isProcedure = true; $1.isFwdDeclaration = true;
+                    $1.Declare($1.fxSig.name, $1);
+                }
+              | PSignature SCOLONSY Body SCOLONSY {
+                    $1.isProcedure = true; $1.isFwdDeclaration = false;
+                    $1.Declare($1.fxSig.name, $1);
+              }
+              ;
 
 PSignature : PROCEDURESY IDENTSY LPARENSY OptFormalParameters RPARENSY {$4.name = $2; $$ = RSWCOMP::Function($4, RSWCOMP::Type());}
            ;
 
-FunctionDecl : FSignature SCOLONSY FORWARDSY SCOLONSY {$1.isFwdDeclaration= true; $1.isProcedure = false;}
-						 | FSignature SCOLONSY Body SCOLONSY {$1.isFwdDeclaration = false; $1.isProcedure = false;}
-						 ;
+FunctionDecl : FSignature SCOLONSY FORWARDSY SCOLONSY {
+                    $1.isFwdDeclaration= true; $1.isProcedure = false;
+                    $1.Declare($1.fxSig.name, $1);
+                }
+             | FSignature SCOLONSY Body SCOLONSY {
+                    $1.isFwdDeclaration = false; $1.isProcedure = false;
+                    $1.Declare($1.fxSig.name, $1);
+                }
+             ;
 
 FSignature : FUNCTIONSY IDENTSY LPARENSY OptFormalParameters RPARENSY COLONSY Type[rt] {$4.name = $2; $$ = RSWCOMP::Function($4, $rt);}
            ;
