@@ -26,6 +26,8 @@ namespace RSWCOMP {
         };
         static std::shared_ptr<Register> consumeRegister();
 
+        static std::vector<std::string> usedRegisters();
+
     };
 
 }

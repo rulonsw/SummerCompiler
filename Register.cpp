@@ -20,4 +20,14 @@ namespace RSWCOMP {
         available.pop_back();
         return std::make_shared<Register>(consumedRegister);
     }
+
+    static std::vector<std::string> Register::usedRegisters() {
+        std::vector<std::string> usedUp =  {"$s0", "$s1", "$s2", "$s3", "$s4", "$s5", "$s6", "$s7",
+                                                  "$t0", "$t1", "$t2", "$t3", "$t4", "$t5", "$t6", "$t7", "$t8", "$t9"};
+        for (auto i : available) {
+            auto found = find(usedUp.begin(), usedUp.end(), i);
+            if(found != usedUp.end()) usedUp.erase(found);
+        }
+        return usedUp;
+    }
 }

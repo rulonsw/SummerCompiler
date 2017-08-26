@@ -23,8 +23,6 @@ namespace RSWCOMP {
     void ConstBlock();
     void WriteABlock();
 
-
-
     const std::shared_ptr<Expression> CharExpr(char c);
     const std::shared_ptr<Expression> IntExpr(int i);
     const std::shared_ptr<Expression> StringExpr(std::string s);
@@ -148,10 +146,10 @@ namespace RSWCOMP {
         }
         int exitConditionalLayer();
 
-        int topOfGlobal() {
-            int i = globalOffset;
-            globalOffset += 4;
-            return i;
+        int topOfStack(int i) {
+            int j = stackOffset;
+            stackOffset -= i;
+            return j;
         }
         int topOfGlobal(int i){
             //Number of discrete variables involved in user-defined class held in arglist * 4

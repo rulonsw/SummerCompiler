@@ -20,7 +20,7 @@ namespace RSWCOMP {
     };
 
     struct LValue {
-        bool isLocal;
+        bool isLocal = false;
         LVInformation lvi;
         Type type;
         int globalOffset;

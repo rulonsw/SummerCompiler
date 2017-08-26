@@ -7,16 +7,17 @@
 
 #include <its_complicated/components/Type.h>
 #include <vector>
-#include "../MetaCoder.h"
+#include <its_complicated/components/Expression.h>
 
 namespace RSWCOMP {
     struct FunctionSignature {
         int numArgs;
         std::vector<Type> argTypes;
-        FunctionSignature & operator= (const FunctionSignature &rhs) {
-            argTypes = rhs.argTypes;
-            numArgs = rhs.numArgs;
-        }
+//        FunctionSignature & operator= (const FunctionSignature &rhs) {
+//            argTypes = rhs.argTypes;
+//            numArgs = rhs.numArgs;
+//
+//        }
     };
     struct CallerArgs {
         int numExpressions;

@@ -10,17 +10,18 @@
 
 namespace RSWCOMP {
     enum TYPE_NAME {
-        T_VOID,
+        T_UNSET,
         T_INTEGER,
         T_BOOLEAN,
         T_CHARACTER,
-        T_STRING
+        T_STRING,
+        T_CUSTOM        // For later ;)
     };
     class Type {
     public:
         ~Type() = default;
-        TYPE_NAME t_name = T_VOID;
-        int memBlkSize = INT32_MIN;
+        TYPE_NAME t_name = T_UNSET;
+        int memBlkSize = 0;
     };
 
     class IntType: public Type {
