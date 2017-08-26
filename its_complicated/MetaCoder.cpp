@@ -520,15 +520,14 @@ namespace RSWCOMP {
         curr->intermediateBlock << "\tsw " << gottenReg << "," << destMemLoc << "# This is the storage location of " << lv->idString << std::endl;
     }
 
+//TODO: Refactor declareConst to include an optional argument of type std::string that indicates the function that consts are being declared for
     void declareConst(std::string cpsl_ref, std::shared_ptr<Expression> exp) {
         auto curr = MetaCoder::curr();
-
-        std::string id = cpsl_ref;
-
-        if (find(curr->ids_toWrite.begin(), curr->ids_toWrite.end(), id) != curr->ids_toWrite.end()) {
-            throw "data with existing id " + id + " is already being used.";
+        if (find(curr->ids_toWrite.begin(), curr->ids_toWrite.end(), cpsl_ref) != curr->ids_toWrite.end()) {
+            throw "data with existing id " + cpsl_ref + " is already being used.";
         }
         LValue newLV;
+        newLV.isLocal = !curr->getScope();
         newLV.idString = cpsl_ref;
         newLV.cpsl_refname = cpsl_ref;
         newLV.type = exp->containedDataType();
@@ -538,7 +537,7 @@ namespace RSWCOMP {
         }
         else {
             newLV.lvi = CONST;
-            curr->intermediateBlock << "\t#id: "<< id << " loaded into consts" << std::endl;
+            curr->intermediateBlock << "\t#id: "<< cpsl_ref << " loaded into consts" << std::endl;
         }
         curr->constExprs[cpsl_ref] = exp;
         curr->LVs[cpsl_ref] = std::make_shared<LValue>(newLV);

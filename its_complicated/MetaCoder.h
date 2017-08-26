@@ -103,7 +103,10 @@ namespace RSWCOMP {
         int numConditionalBlocks = -1;
         int depth = 0;
 
-        bool scope =0;
+        //false: local
+        //true: global
+        bool scope = false;
+
 
     public:
 
