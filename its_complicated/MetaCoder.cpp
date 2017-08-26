@@ -129,29 +129,30 @@ namespace RSWCOMP {
         auto curr = MetaCoder::curr();
         curr->dumpToMain();
         curr->mainBlockToWrite << "\tbeq " << expr->getRegister()->regName << ", $0, "
-                                    << "elseBlock_" << curr->incrConditionalBlkNum() << "_num" << curr->nextElseBlockLabel() << std::endl;
+                                    << "elseBlock_" << curr->incrConditionalBlkNum() << "_num" << curr->nextIfBlockLabel() << std::endl;
     }
     void FinishIfStmt() {
         auto curr = MetaCoder::curr();
+        auto ifDepth = curr->exitConditionalLayer();
         curr->dumpToMain();
-        curr->mainBlockToWrite << "elseBlock_" << curr->exitConditionalLayer() << "_end:" << std::endl;
+        curr->mainBlockToWrite << "elseBlock_" << ifDepth << "_num" << curr->ifBlockLabels[ifDepth] << "_end:" << std::endl;
     }
     void ProcElseIfStmt(std::shared_ptr<Expression> exp) {
         auto curr = MetaCoder::curr();
         curr->dumpToMain();
-        curr->mainBlockToWrite << "\tbeq "<< exp->getRegister()->regName <<", $0, elseBlock_" << curr->getConditionalBlkNum() << "_num" << curr->nextElseBlockLabel()  << std::endl;
+        curr->mainBlockToWrite << "\tbeq "<< exp->getRegister()->regName <<", $0, elseBlock_" << curr->getConditionalBlkNum() << "_num" << curr->nextIfBlockLabel()  << std::endl;
     }
     void PrepElseIfStmt() {
         auto curr = MetaCoder::curr();
         curr->dumpToMain();
         curr->mainBlockToWrite << "j elseBlock_" << curr->getConditionalBlkNum() << "_end" << std::endl;
-        curr->mainBlockToWrite << "elseBlock_" << curr->getConditionalBlkNum() << "_num" << curr->elseBlockLabels[curr->getConditionalBlkNum()] << ":" << std::endl;
+        curr->mainBlockToWrite << "elseBlock_" << curr->getConditionalBlkNum() << "_num" << curr->ifBlockLabels[curr->getConditionalBlkNum()] << ":" << std::endl;
     }
     void ProcElseStmt() {
         auto curr = MetaCoder::curr();
         curr->dumpToMain();
         curr->mainBlockToWrite << "j elseBlock_" << curr->getConditionalBlkNum() << "_end" << std::endl;
-        curr->mainBlockToWrite << "elseBlock_" << curr->getConditionalBlkNum() << "_num" << curr->elseBlockLabels[curr->getConditionalBlkNum()] << ":" << std::endl;
+        curr->mainBlockToWrite << "elseBlock_" << curr->getConditionalBlkNum() << "_num" << curr->ifBlockLabels[curr->getConditionalBlkNum()] << ":" << std::endl;
     }
 
     /*****LOOPS*****/

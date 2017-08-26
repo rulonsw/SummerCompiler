@@ -144,7 +144,7 @@ namespace RSWCOMP {
         }
         int getConditionalBlkNum() {return numConditionalBlocks;}
         int incrConditionalBlkNum() {
-            elseBlockLabels[numConditionalBlocks+1] = 0;
+            ifBlockLabels[numConditionalBlocks+1] = 0;
             return ++numConditionalBlocks;
         }
         int exitConditionalLayer();
@@ -166,10 +166,18 @@ namespace RSWCOMP {
 
         std::vector<std::string> ids_toWrite;
 
-        std::map<int, int> elseBlockLabels;
+        std::map<int, int> ifBlockLabels;
+        std::vector<int> elseBlockLabels;
+        int nextIfBlockLabel() {
+            ifBlockLabels[numConditionalBlocks] += 1;
+            return ifBlockLabels[numConditionalBlocks];
+        }
+        int getIfBlockLabel() {
+            return ifBlockLabels[numConditionalBlocks];
+        }
+
         int nextElseBlockLabel() {
-            elseBlockLabels[numConditionalBlocks] += 1;
-            return elseBlockLabels[numConditionalBlocks];
+            elseBlockLabels[getIfBlockLabel()] += 1;
         }
 
         std::unordered_map<std::string, std::shared_ptr<LValue>> LVs;

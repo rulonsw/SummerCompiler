@@ -21,6 +21,18 @@ namespace RSWCOMP {
         void deepen();
 
     };
+    class IfContext {
+        int maxDepth = -1;
+        std::vector<int> IfIdAtDepth;
+        std::map<int, int> numElsesAtDepth;
+    public:
+        IfContext();
+        int getMaxDepth();
+        int getIfLabelAtDepth(int i);
+        int getNumElseLabelsAtDepth(int i);
+        int pushElseAtDepth(int i);
+        int pushIfAtDepth(int i);
+    };
 }
 
 
