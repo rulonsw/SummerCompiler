@@ -43,6 +43,9 @@ namespace RSWCOMP {
 
 
     }
+    void Function::loadLocalVariables(CallerArgs args) {
+
+    }
 
     const std::shared_ptr<Expression> Function::Call(std::string name, CallerArgs args) {
         auto curr = MetaCoder::curr();
@@ -76,6 +79,8 @@ namespace RSWCOMP {
         }
 
         // Don't forget to bring along the arguments list, too
+
+        //TODO: Catch these crazy things on the other end of whatever function is being called, with a compiler-side function
         j=0;    //Thanks, j
         for(int i = 0; i < args.numExpressions; i++) {
             j += args.passedArguments[i]->containedDataType().memBlkSize;
@@ -106,7 +111,7 @@ namespace RSWCOMP {
         lvToAdd.lvi = STACK_REF;
         lvToAdd.stackOffset = -4;
 
-        auto retExp = std::make_shared<Expression>(ExprFromLV(std::make_shared<LValue>(lvToAdd)));
+        auto retExp = ExprFromLV(std::make_shared<LValue>(lvToAdd));
 
         return retExp;
     }

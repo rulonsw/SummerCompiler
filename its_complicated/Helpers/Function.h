@@ -34,6 +34,7 @@ namespace RSWCOMP {
         Function(FunctionSignature, std::shared_ptr<Type>);
 
         void Declare(std::string, Function);
+        void loadLocalVariables(CallerArgs args);
         const std::shared_ptr<Expression> Call(std::string, CallerArgs);
         const std::shared_ptr<Expression> ReturnFrom();
     };
