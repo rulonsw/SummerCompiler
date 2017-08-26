@@ -10,6 +10,7 @@
 namespace RSWCOMP {
 
     std::shared_ptr<Register> Expression::getRegister() {
+
         if(this->exprType == memoryLocation) {
             return regLocation;
         }

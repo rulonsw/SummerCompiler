@@ -11,13 +11,18 @@
 
 namespace RSWCOMP {
     struct FunctionSignature {
+        // As per CPSL Document: "The signature consists of the
+        //    name of the function as well as the number, type, and order of the parameters."
+
+        std::string name;
         int numArgs;
         std::vector<Type> argTypes;
-//        FunctionSignature & operator= (const FunctionSignature &rhs) {
-//            argTypes = rhs.argTypes;
-//            numArgs = rhs.numArgs;
-//
-//        }
+        //argNames only used during local variable assignment
+        std::vector<std::string> argNames;
+
+        FunctionSignature(std::string, int, std::vector<Type>);
+        FunctionSignature();
+        FunctionSignature(std::vector<std::string>, std::vector<Type>);
     };
     struct CallerArgs {
         int numExpressions;
@@ -28,15 +33,16 @@ namespace RSWCOMP {
         bool isProcedure;
         bool isFwdDeclaration;
 
-        std::shared_ptr<Type> returnType;
+        Type returnType;
         FunctionSignature fxSig;
 
-        Function(FunctionSignature, std::shared_ptr<Type>);
+        Function(FunctionSignature, Type);
+        Function();
 
         void Declare(std::string, Function);
-        void loadLocalVariables(CallerArgs args);
+        void loadLocalVariables(std::string, FunctionSignature args);
         const std::shared_ptr<Expression> Call(std::string, CallerArgs);
-        const std::shared_ptr<Expression> ReturnFrom();
+        const std::shared_ptr<Expression> ReturnFrom(std::string name);
     };
 }
 

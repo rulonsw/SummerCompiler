@@ -114,13 +114,14 @@ class Driver;
 %type <int> ElseIfHead
 %type <int> ElseIfList
 %type <std::shared_ptr<RSWCOMP::Expression>> Expression
-%type <int> FSignature
+%type <RSWCOMP::Function> FSignature
 %type <int> FieldDecl
 %type <int> FieldDecls
 %type <int> ForHead
 %type <int> ForStatement
-%type <int> FormalParameter
-%type <int> FormalParameters
+%type <std::pair<std::vector<std::string>, std::vector<RSWCOMP::Type>>> FormalParameter
+%type <std::pair<std::vector<std::string>, std::vector<RSWCOMP::Type>>> FormalParameters
+%type <std::vector<std::string> > PFIdentList
 %type <int> FunctionCall
 %type <int> INTSY
 %type <int> IdentList
@@ -129,8 +130,8 @@ class Driver;
 %type <int> IfStatement
 %type <std::shared_ptr<RSWCOMP::LValue>> LValue
 %type <int> OptArguments
-%type <int> OptFormalParameters
-%type <int> PSignature
+%type <RSWCOMP::FunctionSignature> OptFormalParameters
+%type <RSWCOMP::Function> PSignature
 %type <int> ProcedureCall
 %type <int> ReadArgs
 %type <int> ReadStatement
@@ -173,30 +174,52 @@ PFDecls : PFDecls ProcedureDecl
         |
         ;
 
-ProcedureDecl : PSignature SCOLONSY FORWARDSY SCOLONSY {}
-              | PSignature SCOLONSY Body SCOLONSY {}
+ProcedureDecl : PSignature SCOLONSY FORWARDSY SCOLONSY {$1.isProcedure = true; $1.isFwdDeclaration = true;}
+              | PSignature SCOLONSY Body SCOLONSY {$1.isProcedure = true;}
 				    	;
 
-PSignature : PROCEDURESY IDENTSY LPARENSY OptFormalParameters RPARENSY {}
+PSignature : PROCEDURESY IDENTSY LPARENSY OptFormalParameters RPARENSY {$4.name = $2; $$ = RSWCOMP::Function($4, RSWCOMP::Type());}
            ;
 
-FunctionDecl : FSignature SCOLONSY FORWARDSY SCOLONSY {}
-						 | FSignature SCOLONSY Body SCOLONSY {}
+FunctionDecl : FSignature SCOLONSY FORWARDSY SCOLONSY {$1.isFwdDeclaration= true; $1.isProcedure = false;}
+						 | FSignature SCOLONSY Body SCOLONSY {$1.isFwdDeclaration = false; $1.isProcedure = false;}
 						 ;
 
-FSignature : FUNCTIONSY IDENTSY LPARENSY OptFormalParameters RPARENSY COLONSY Type {}
+FSignature : FUNCTIONSY IDENTSY LPARENSY OptFormalParameters RPARENSY COLONSY Type[rt] {$4.name = $2; $$ = RSWCOMP::Function($4, $rt);}
            ;
 
-OptFormalParameters : FormalParameters {}
-                    | {}
+OptFormalParameters : FormalParameters {
+                            RSWCOMP::FunctionSignature fs($1.first, $1.second);
+                            $$ = fs;
+                        }
+                    | {RSWCOMP::FunctionSignature fs;
+                            $$ = fs;
+                      }
                     ;
 
-FormalParameters : FormalParameters SCOLONSY FormalParameter {}
-                 | FormalParameter {}
+FormalParameters : FormalParameters SCOLONSY FormalParameter {
+                        for(int i = 0; i < $3.first.size(); i++) {
+                            $$.first.push_back($3.first.at(i));
+                            $$.second.push_back($3.second.at(i));
+                        }
+                        $$ = $1;
+                    }
+                 | FormalParameter {
+                        $$ = $1;
+                    }
                  ;
-
-FormalParameter : OptVar IdentList COLONSY Type {}
+//TODO: FormalParameter type needs to be changed to a std::pair
+FormalParameter : OptVar PFIdentList COLONSY Type {
+                        for(auto i : $2) {
+                            $$.first.push_back(i);
+                            $$.second.push_back($4);
+                        }
+                    }
                 ;
+
+PFIdentList : PFIdentList COMMASY IDENTSY {$$.push_back($3); $$ = $1;}
+            | IDENTSY {$$.push_back($1);}
+
 
 OptVar : VARSY {}
        | REFSY {}
@@ -243,7 +266,10 @@ FieldDecls : FieldDecls FieldDecl {}
 FieldDecl : IdentList COLONSY Type SCOLONSY {}
           ;
 
-IdentList : IdentList COMMASY IDENTSY {RSWCOMP::MakeId($3);}
+IdentList : IdentList COMMASY IDENTSY {
+                //TODO: reform MakeId with scope sensitivity
+                RSWCOMP::MakeId($3);
+            }
           | IDENTSY {RSWCOMP::MakeId($1);}
           ;
 

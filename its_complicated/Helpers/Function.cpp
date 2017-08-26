@@ -6,9 +6,30 @@
 #include "Function.h"
 
 namespace RSWCOMP {
-    Function::Function(FunctionSignature f, std::shared_ptr<Type> retType) {
+    FunctionSignature::FunctionSignature(std::string n, int na, std::vector<Type> at) {
+        name = n;
+        numArgs = na;
+        argTypes = at;
+    }
+
+    FunctionSignature::FunctionSignature() {
+        name = "undefined";
+        numArgs = INT32_MIN;
+        argTypes = std::vector<Type>();
+    }
+
+    FunctionSignature::FunctionSignature(std::vector<std::string> an, std::vector<Type> at) {
+        argNames = an;
+        argTypes = at;
+    }
+
+    Function::Function(FunctionSignature f, Type retType) {
         fxSig = f;
         returnType = retType;
+    }
+    Function::Function() {
+        fxSig = FunctionSignature();
+        returnType = Type();
     }
 
     void Function::Declare(std::string name, Function f) {
@@ -43,7 +64,28 @@ namespace RSWCOMP {
 
 
     }
-    void Function::loadLocalVariables(CallerArgs args) {
+    void Function::loadLocalVariables(std::string name, FunctionSignature args) {
+        auto curr = MetaCoder::curr();
+
+        auto found = curr->functions.find(name);
+        if (found == curr->functions.end()) throw "Local variable loading error: function reference not found in MetaCoder record.";
+
+        if(!found->second->isProcedure) {
+            auto retLV = LValue();
+            retLV.idString = "return";
+            retLV.type = found->second->returnType;
+            retLV.lvi = STACK_REF;
+            retLV.stackOffset = found->second->returnType.memBlkSize * -1;
+            retLV.isLocal = true;
+            curr->LVs["return"] = std::make_shared<LValue>(retLV);
+        }
+        if(args.numArgs != 0) {
+            for(auto i : args.argTypes) {
+                auto localLV = LValue();
+//                localLV.idString =
+            }
+
+        }
 
     }
 
@@ -51,15 +93,15 @@ namespace RSWCOMP {
         auto curr = MetaCoder::curr();
 
         auto found = curr->functions.find(name);
-        if (found == curr->functions.end()) throw "Function not found error: please ensure that function '" + name + "' is defined before calling.";
+        if (found == curr->functions.end()) throw "Function not found - Call error: please ensure that function '" + name + "' is defined before calling.";
         if (args.numExpressions != found->second->fxSig.numArgs) throw "Call args error: please ensure your function call arguments match the expected number of arguments for the function.";
 
         int j = 0;
         for(auto i : args.passedArguments) {
             if (i->containedDataType().t_name != found->second->fxSig.argTypes.at(j).t_name)
-                throw "Argument-definition Typename mismatch error: please ensure your function call uses the expected sequence of argument types.";
+                throw "Argument-definition Typename mismatch - Call error: please ensure your function call uses the expected sequence of argument types.";
             if (i->containedDataType().memBlkSize != found->second->fxSig.argTypes.at(j).memBlkSize)
-                throw "Argument-definition Typesize mismatch error: unexpected memory size encountered in argument list.";
+                throw "Argument-definition Typesize mismatch - Call error: unexpected memory size encountered in argument list.";
             j++;
         }
 
@@ -107,7 +149,7 @@ namespace RSWCOMP {
 
         auto lvToAdd = LValue();
         lvToAdd.idString = "retVal";
-        lvToAdd.type = *found->second->returnType;
+        lvToAdd.type = found->second->returnType;
         lvToAdd.lvi = STACK_REF;
         lvToAdd.stackOffset = -4;
 
@@ -116,9 +158,11 @@ namespace RSWCOMP {
         return retExp;
     }
 
-    const std::shared_ptr<Expression> Function::ReturnFrom() {
+    const std::shared_ptr<Expression> Function::ReturnFrom(std::string name) {
         return std::shared_ptr<Expression>();
     }
+
+
 
 
 }
