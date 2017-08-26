@@ -13,6 +13,7 @@
 #include <its_complicated/components/Expression.h>
 #include <vector>
 #include <sstream>
+#include <its_complicated/Helpers/Function.h>
 #include "its_complicated/components/LValue.h"
 #include "its_complicated/Helpers/CtrlContext.h"
 
@@ -104,7 +105,12 @@ namespace RSWCOMP {
         int numConditionalBlocks = -1;
         int depth = 0;
 
+        bool scope =0;
+
     public:
+
+        bool getScope() {return scope;}
+        void toggleScope() {scope = !scope;}
 
         CtrlContext whileContext;
         CtrlContext repeatContext;
@@ -142,9 +148,6 @@ namespace RSWCOMP {
         }
         int exitConditionalLayer();
 
-//        int getNumWhileBlks() {return numWhileBlocks;}
-//        int incrWhileBlks() {return ++numWhileBlocks;}
-
         int topOfGlobal() {
             int i = globalOffset;
             globalOffset += 4;
@@ -170,6 +173,7 @@ namespace RSWCOMP {
 
         std::unordered_map<std::string, std::shared_ptr<LValue>> LVs;
         std::unordered_map<std::string, std::shared_ptr<Expression>> constExprs;
+        std::unordered_map<std::string, std::shared_ptr<Function>> functions;
 
         int nextStringCtr() {
             int ret = stringCounter;
