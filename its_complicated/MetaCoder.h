@@ -13,6 +13,7 @@
 #include <its_complicated/components/Expression.h>
 #include <vector>
 #include <sstream>
+#include <its_complicated/Helpers/Function.h>
 #include "its_complicated/components/LValue.h"
 #include "its_complicated/Helpers/CtrlContext.h"
 
@@ -22,14 +23,12 @@ namespace RSWCOMP {
     void ConstBlock();
     void WriteABlock();
 
-
-
     const std::shared_ptr<Expression> CharExpr(char c);
     const std::shared_ptr<Expression> IntExpr(int i);
     const std::shared_ptr<Expression> StringExpr(std::string s);
 
-    void MakeVar(Type t);
-    void MakeId(std::string s);
+    void MakeVar(Type t, std::shared_ptr<std::string> calledFrom);
+    void MakeId(std::string s, std::shared_ptr<std::string> calledFrom);
 
     const std::shared_ptr<Expression> ChrExpr(std::shared_ptr<Expression> expr);
     const std::shared_ptr<Expression> OrdExpr(std::shared_ptr<Expression> e);
@@ -41,7 +40,7 @@ namespace RSWCOMP {
     const std::shared_ptr<Expression> OrExpr(std::shared_ptr<Expression> e1, std::shared_ptr<Expression> e2);
     const std::shared_ptr<Expression> NotExpr(std::shared_ptr<Expression> e);
 
-    void declareConst(std::string id, std::shared_ptr<Expression> exp);
+    void declareConst(std::string id, std::shared_ptr<Expression> exp, std::shared_ptr<std::string> calledFrom);
     std::string ExpToConstData(std::shared_ptr<Expression> exp);
 
     void ReadValue(std::shared_ptr<LValue> lv);
@@ -101,14 +100,22 @@ namespace RSWCOMP {
         int stringCounter = 0;
         int dataCounter = 0;
 
-        int numConditionalBlocks = -1;
         int depth = 0;
 
+        //false: local
+        //true: global
+        bool scope = false;
+
+
     public:
+
+        bool getScope() {return scope;}
+        void toggleScope() {scope = !scope;}
 
         CtrlContext whileContext;
         CtrlContext repeatContext;
         CtrlContext forContext;
+        IfContext ifContext;
 
         std::vector<std::string> tosToSort;
         std::vector<std::string> toUps;
@@ -132,23 +139,15 @@ namespace RSWCOMP {
                 whileContext.deepen();
                 repeatContext.deepen();
                 forContext.deepen();
+                ifContext.deepen();
             }
 
         }
-        int getConditionalBlkNum() {return numConditionalBlocks;}
-        int incrConditionalBlkNum() {
-            elseBlockLabels[numConditionalBlocks+1] = 0;
-            return ++numConditionalBlocks;
-        }
-        int exitConditionalLayer();
 
-//        int getNumWhileBlks() {return numWhileBlocks;}
-//        int incrWhileBlks() {return ++numWhileBlocks;}
-
-        int topOfGlobal() {
-            int i = globalOffset;
-            globalOffset += 4;
-            return i;
+        int topOfStack(int i) {
+            int j = stackOffset;
+            stackOffset -= i;
+            return j;
         }
         int topOfGlobal(int i){
             //Number of discrete variables involved in user-defined class held in arglist * 4
@@ -162,14 +161,9 @@ namespace RSWCOMP {
 
         std::vector<std::string> ids_toWrite;
 
-        std::map<int, int> elseBlockLabels;
-        int nextElseBlockLabel() {
-            elseBlockLabels[numConditionalBlocks] += 1;
-            return elseBlockLabels[numConditionalBlocks];
-        }
-
         std::unordered_map<std::string, std::shared_ptr<LValue>> LVs;
         std::unordered_map<std::string, std::shared_ptr<Expression>> constExprs;
+        std::unordered_map<std::string, std::shared_ptr<Function>> functions;
 
         int nextStringCtr() {
             int ret = stringCounter;

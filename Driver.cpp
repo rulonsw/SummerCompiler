@@ -33,12 +33,12 @@ int main(int argc, char* argv[]) {
     //Usage of program:
         //cpslc infile [-o outfile]
     if ((argc == 3) /*if -o is used and there isn't at least one arg afterward...*/||
-            (argc == 4 && argv[1] != std::string("-o"))/*if 4 args are supplied and the second isn't "-o"...*/||
+            (argc == 4 && argv[2] != std::string("-o"))/*if 4 args are supplied and the third isn't "-o"...*/||
             argc > 4 /*if there are more than 4 total arguments...*/) {
         std::cout << "ERR: Invalid function call. If you're attempting to invoke the compiler\n"
-                "with a custom output idString, Please pair the \"-o\" option with a valid\n"
-                     "number of arguments, followed by the input filename.\n"
-                             "Sample:\n\n>>cpslc -o out_file_name.asm cpsl_file_name.cpsl" << std::endl;
+                "with a custom output idString, please state the input file, followed by the \"-o\" option and a valid\n"
+                     "output file name."
+                             "Sample:\n\n>>./SummerCompiler cpsl_file_name.cpsl -o out_file_name.asm" << std::endl;
         return -1;
     }
     try {

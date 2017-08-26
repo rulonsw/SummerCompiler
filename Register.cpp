@@ -11,7 +11,7 @@ namespace RSWCOMP {
 
     std::shared_ptr<Register> Register::consumeRegister() {
 
-        if(available.empty() == true) {
+        if(available.empty()) {
             throw "Register pool is empty. Abort!";
         }
         std::string consumedRegister;
@@ -20,4 +20,5 @@ namespace RSWCOMP {
         available.pop_back();
         return std::make_shared<Register>(consumedRegister);
     }
+
 }

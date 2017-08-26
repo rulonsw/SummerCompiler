@@ -50,22 +50,15 @@ namespace RSWCOMP {
         curr->intermediateBlock.str(std::string());
     }
 
-    int MetaCoder::exitConditionalLayer() {
-        auto ret = numConditionalBlocks;
-        numConditionalBlocks--;
-        elseBlockLabels.erase(ret);
-        return ret;
-    }
-
     std::shared_ptr<MetaCoder> MetaCoder::curr() {
         if(_content == nullptr) {
             RSWCOMP::MetaCoder::_content = std::make_shared<MetaCoder>();
             _content->intermediateBlock << ".globl main\n\nmain:\n";
 
-            declareConst("true", std::make_shared<Expression>(1, BooleanType()));
-            declareConst("TRUE", std::make_shared<Expression>(1, BooleanType()));
-            declareConst("false", std::make_shared<Expression>(0, BooleanType()));
-            declareConst("FALSE", std::make_shared<Expression>(0, BooleanType()));
+            declareConst("true", std::make_shared<Expression>(1, BooleanType()), nullptr);
+            declareConst("TRUE", std::make_shared<Expression>(1, BooleanType()), nullptr);
+            declareConst("false", std::make_shared<Expression>(0, BooleanType()), nullptr);
+            declareConst("FALSE", std::make_shared<Expression>(0, BooleanType()), nullptr);
             _content->dumpToMain();
         }
         return MetaCoder::_content;
@@ -73,7 +66,6 @@ namespace RSWCOMP {
 
     std::string MetaCoder::_outputFileName = "out.asm";
     MetaCoder::MetaCoder() {
-        std::cout << "Writing code to " << _outputFileName << "..." << std::endl;
         out.open(_outputFileName);
     }
     MetaCoder::~MetaCoder() {
@@ -131,30 +123,33 @@ namespace RSWCOMP {
     void ProcIfStmt(std::shared_ptr<Expression> expr) {
         auto curr = MetaCoder::curr();
         curr->dumpToMain();
+        curr->deep();
         curr->mainBlockToWrite << "\tbeq " << expr->getRegister()->regName << ", $0, "
-                                    << "elseBlock_" << curr->incrConditionalBlkNum() << "_num" << curr->nextElseBlockLabel() << std::endl;
+                                    << "elseBlock_" << curr->ifContext.pushElseAtDepth(curr->getDepth()) << "_depth";
+        curr->mainBlockToWrite << curr->getDepth() << std::endl;
     }
     void FinishIfStmt() {
         auto curr = MetaCoder::curr();
         curr->dumpToMain();
-        curr->mainBlockToWrite << "elseBlock_" << curr->exitConditionalLayer() << "_end:" << std::endl;
+        curr->mainBlockToWrite << "ifBlock_" << curr->ifContext.pushIfAtDepth(curr->getDepth()) << "_depth" << curr->getDepth() << "_end:" << std::endl;
+        curr->shallow();
     }
     void ProcElseIfStmt(std::shared_ptr<Expression> exp) {
         auto curr = MetaCoder::curr();
         curr->dumpToMain();
-        curr->mainBlockToWrite << "\tbeq "<< exp->getRegister()->regName <<", $0, elseBlock_" << curr->getConditionalBlkNum() << "_num" << curr->nextElseBlockLabel()  << std::endl;
+        curr->mainBlockToWrite << "\tbeq "<< exp->getRegister()->regName <<", $0, elseBlock_" << curr->ifContext.getNumElseLabelsAtDepth(curr->getDepth()) << "_depth" << curr->getDepth()  << std::endl;
     }
     void PrepElseIfStmt() {
         auto curr = MetaCoder::curr();
         curr->dumpToMain();
-        curr->mainBlockToWrite << "j elseBlock_" << curr->getConditionalBlkNum() << "_end" << std::endl;
-        curr->mainBlockToWrite << "elseBlock_" << curr->getConditionalBlkNum() << "_num" << curr->elseBlockLabels[curr->getConditionalBlkNum()] << ":" << std::endl;
+        curr->mainBlockToWrite << "j ifBlock_" << curr->ifContext.getIfLabelAtDepth(curr->getDepth()) << "_depth" << curr->getDepth() << "_end" << std::endl;
+        curr->mainBlockToWrite << "elseBlock_" << curr->ifContext.pushElseAtDepth(curr->getDepth()) << "_depth" << curr->getDepth() << ":" << std::endl;
     }
     void ProcElseStmt() {
         auto curr = MetaCoder::curr();
         curr->dumpToMain();
-        curr->mainBlockToWrite << "j elseBlock_" << curr->getConditionalBlkNum() << "_end" << std::endl;
-        curr->mainBlockToWrite << "elseBlock_" << curr->getConditionalBlkNum() << "_num" << curr->elseBlockLabels[curr->getConditionalBlkNum()] << ":" << std::endl;
+        curr->mainBlockToWrite << "j ifBlock_" << curr->ifContext.getIfLabelAtDepth(curr->getDepth()) << "_depth" << curr->getDepth() << "_end" << std::endl;
+        curr->mainBlockToWrite << "elseBlock_" << curr->ifContext.getNumElseLabelsAtDepth(curr->getDepth()) << "_depth" << curr->getDepth()<< ":" << std::endl;
     }
 
     /*****LOOPS*****/
@@ -285,11 +280,14 @@ namespace RSWCOMP {
         return std::make_shared<Expression>(s, StringType());
     }
 
-    void MakeId(std::string s) {
+    //done: reform MakeId with scope sensitivity
+    void MakeId(std::string s, std::shared_ptr<std::string> calledFrom) {
         auto curr = MetaCoder::curr();
+        if (calledFrom != nullptr) s = s.append(("_" + *calledFrom));
         curr->ids_toWrite.push_back(s);
     }
-    void MakeVar(Type t) {
+    //done: reform MakeVar with scope sensitivity
+    void MakeVar(Type t, std::shared_ptr<std::string> calledFrom) {
         /*This method is essentially only called when there's 1+ things in the `ids_toWrite` vector.*/
         auto curr = MetaCoder::curr();
 
@@ -297,17 +295,22 @@ namespace RSWCOMP {
 
         while(curr->ids_toWrite.size() != 0) {
             auto foo = curr->ids_toWrite[0];
+
+            if(calledFrom != nullptr) foo = foo.append(("_" + *calledFrom));
+
             auto isFound = curr->LVs.find(foo);
             if (isFound != curr->LVs.end()) {
                 throw("Duplicate LValue idString found during compilation. Please retry using distinct var names for each variable.");
             }
             LValue lv;
 
-            lv.lvi = GLOBAL_REF;
+            lv.lvi = calledFrom == nullptr? GLOBAL_REF : STACK_REF;
             lv.idString = foo;
             lv.cpsl_refname = foo;
-            lv.globalOffset = curr->topOfGlobal(t.memBlkSize);
+            if (calledFrom == nullptr) lv.globalOffset = curr->topOfGlobal(t.memBlkSize);
+            else lv.stackOffset = curr->topOfStack(t.memBlkSize);
             lv.type = t;
+            if (calledFrom == nullptr) lv.isLocal = true;
             curr->LVs[foo] = std::make_shared<RSWCOMP::LValue>(lv);
 
             curr->ids_toWrite.erase(curr->ids_toWrite.begin());
@@ -520,17 +523,16 @@ namespace RSWCOMP {
         curr->intermediateBlock << "\tsw " << gottenReg << "," << destMemLoc << "# This is the storage location of " << lv->idString << std::endl;
     }
 
-    void declareConst(std::string cpsl_ref, std::shared_ptr<Expression> exp) {
+//DONE: Refactor declareConst to include an optional argument of type std::string that indicates the function that consts are being declared for
+    void declareConst(std::string cpsl_ref, std::shared_ptr<Expression> exp, std::shared_ptr<std::string> calledFrom) {
         auto curr = MetaCoder::curr();
-
-        std::string id = cpsl_ref;
-
-        if (find(curr->ids_toWrite.begin(), curr->ids_toWrite.end(), id) != curr->ids_toWrite.end()) {
-            throw "data with existing id " + id + " is already being used.";
+        if (find(curr->ids_toWrite.begin(), curr->ids_toWrite.end(), cpsl_ref) != curr->ids_toWrite.end()) {
+            throw "data with existing id " + cpsl_ref + " is already being used.";
         }
         LValue newLV;
-        newLV.idString = cpsl_ref;
-        newLV.cpsl_refname = cpsl_ref;
+        newLV.isLocal = !curr->getScope();
+        newLV.idString = calledFrom == nullptr ? cpsl_ref : cpsl_ref + "_" + *calledFrom;
+        newLV.cpsl_refname = calledFrom == nullptr ? cpsl_ref : cpsl_ref + "_" + *calledFrom;
         newLV.type = exp->containedDataType();
 
         if (exp->containedDataType().t_name == T_STRING) {
@@ -538,10 +540,10 @@ namespace RSWCOMP {
         }
         else {
             newLV.lvi = CONST;
-            curr->intermediateBlock << "\t#id: "<< id << " loaded into consts" << std::endl;
+            curr->intermediateBlock << "\t#id: "<< cpsl_ref << " loaded into " << (calledFrom == nullptr ?  "" : "local ") << "consts" << std::endl;
         }
-        curr->constExprs[cpsl_ref] = exp;
-        curr->LVs[cpsl_ref] = std::make_shared<LValue>(newLV);
+        curr->constExprs[newLV.idString] = exp;
+        curr->LVs[newLV.idString] = std::make_shared<LValue>(newLV);
     }
 
     void ReadValue(std::shared_ptr<LValue> lv) {
@@ -559,7 +561,6 @@ namespace RSWCOMP {
 
         curr->intermediateBlock << "\tli $v0, " << MIPSReadType << "\n\tsyscall\n\tsw $v0," << destMemLoc << std::endl;
     }
-
     void WriteExpr(std::shared_ptr<Expression> exp) {
         auto curr = MetaCoder::curr();
         switch(exp->containedDataType().memBlkSize) {
@@ -581,7 +582,7 @@ namespace RSWCOMP {
                 std::string searchFor = exp->exprId;
                 if (searchFor == "UNSET_ID") {
                     exp->exprId = ExpToConstData(exp);
-                    declareConst(exp->exprId,std::make_shared<Expression>(exp->getStrVal(), StringType()));
+                    declareConst(exp->exprId,std::make_shared<Expression>(exp->getStrVal(), StringType()), nullptr);
                 }
                 std::shared_ptr<LValue> lvTemp = LVFromID(exp->exprId);
                 auto expRet = ExprFromLV(lvTemp);
