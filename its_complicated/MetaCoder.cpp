@@ -50,11 +50,6 @@ namespace RSWCOMP {
         curr->intermediateBlock.str(std::string());
     }
 
-    int MetaCoder::exitConditionalLayer() {
-        auto ret = numConditionalBlocks;
-        return ret;
-    }
-
     std::shared_ptr<MetaCoder> MetaCoder::curr() {
         if(_content == nullptr) {
             RSWCOMP::MetaCoder::_content = std::make_shared<MetaCoder>();
@@ -128,31 +123,33 @@ namespace RSWCOMP {
     void ProcIfStmt(std::shared_ptr<Expression> expr) {
         auto curr = MetaCoder::curr();
         curr->dumpToMain();
+        curr->deep();
         curr->mainBlockToWrite << "\tbeq " << expr->getRegister()->regName << ", $0, "
-                                    << "elseBlock_" << curr->incrConditionalBlkNum() << "_num" << curr->nextIfBlockLabel() << std::endl;
+                                    << "elseBlock_" << curr->ifContext.pushElseAtDepth(curr->getDepth()) << "_depth";
+        curr->mainBlockToWrite << curr->getDepth() << std::endl;
     }
     void FinishIfStmt() {
         auto curr = MetaCoder::curr();
-        auto ifDepth = curr->exitConditionalLayer();
         curr->dumpToMain();
-        curr->mainBlockToWrite << "elseBlock_" << ifDepth << "_num" << curr->ifBlockLabels[ifDepth] << "_end:" << std::endl;
+        curr->mainBlockToWrite << "ifBlock_" << curr->ifContext.pushIfAtDepth(curr->getDepth()) << "_depth" << curr->getDepth() << "_end:" << std::endl;
+        curr->shallow();
     }
     void ProcElseIfStmt(std::shared_ptr<Expression> exp) {
         auto curr = MetaCoder::curr();
         curr->dumpToMain();
-        curr->mainBlockToWrite << "\tbeq "<< exp->getRegister()->regName <<", $0, elseBlock_" << curr->getConditionalBlkNum() << "_num" << curr->nextIfBlockLabel()  << std::endl;
+        curr->mainBlockToWrite << "\tbeq "<< exp->getRegister()->regName <<", $0, elseBlock_" << curr->ifContext.getNumElseLabelsAtDepth(curr->getDepth()) << "_depth" << curr->getDepth()  << std::endl;
     }
     void PrepElseIfStmt() {
         auto curr = MetaCoder::curr();
         curr->dumpToMain();
-        curr->mainBlockToWrite << "j elseBlock_" << curr->getConditionalBlkNum() << "_end" << std::endl;
-        curr->mainBlockToWrite << "elseBlock_" << curr->getConditionalBlkNum() << "_num" << curr->ifBlockLabels[curr->getConditionalBlkNum()] << ":" << std::endl;
+        curr->mainBlockToWrite << "j ifBlock_" << curr->ifContext.getIfLabelAtDepth(curr->getDepth()) << "_depth" << curr->getDepth() << "_end" << std::endl;
+        curr->mainBlockToWrite << "elseBlock_" << curr->ifContext.pushElseAtDepth(curr->getDepth()) << "_depth" << curr->getDepth() << ":" << std::endl;
     }
     void ProcElseStmt() {
         auto curr = MetaCoder::curr();
         curr->dumpToMain();
-        curr->mainBlockToWrite << "j elseBlock_" << curr->getConditionalBlkNum() << "_end" << std::endl;
-        curr->mainBlockToWrite << "elseBlock_" << curr->getConditionalBlkNum() << "_num" << curr->ifBlockLabels[curr->getConditionalBlkNum()] << ":" << std::endl;
+        curr->mainBlockToWrite << "j ifBlock_" << curr->ifContext.getIfLabelAtDepth(curr->getDepth()) << "_depth" << curr->getDepth() << "_end" << std::endl;
+        curr->mainBlockToWrite << "elseBlock_" << curr->ifContext.getNumElseLabelsAtDepth(curr->getDepth()) << "_depth" << curr->getDepth()<< ":" << std::endl;
     }
 
     /*****LOOPS*****/

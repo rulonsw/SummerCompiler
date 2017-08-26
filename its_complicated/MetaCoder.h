@@ -100,7 +100,6 @@ namespace RSWCOMP {
         int stringCounter = 0;
         int dataCounter = 0;
 
-        int numConditionalBlocks = -1;
         int depth = 0;
 
         //false: local
@@ -116,6 +115,7 @@ namespace RSWCOMP {
         CtrlContext whileContext;
         CtrlContext repeatContext;
         CtrlContext forContext;
+        IfContext ifContext;
 
         std::vector<std::string> tosToSort;
         std::vector<std::string> toUps;
@@ -139,15 +139,10 @@ namespace RSWCOMP {
                 whileContext.deepen();
                 repeatContext.deepen();
                 forContext.deepen();
+                ifContext.deepen();
             }
 
         }
-        int getConditionalBlkNum() {return numConditionalBlocks;}
-        int incrConditionalBlkNum() {
-            ifBlockLabels[numConditionalBlocks+1] = 0;
-            return ++numConditionalBlocks;
-        }
-        int exitConditionalLayer();
 
         int topOfStack(int i) {
             int j = stackOffset;
@@ -165,20 +160,6 @@ namespace RSWCOMP {
         static std::shared_ptr<MetaCoder> curr();
 
         std::vector<std::string> ids_toWrite;
-
-        std::map<int, int> ifBlockLabels;
-        std::vector<int> elseBlockLabels;
-        int nextIfBlockLabel() {
-            ifBlockLabels[numConditionalBlocks] += 1;
-            return ifBlockLabels[numConditionalBlocks];
-        }
-        int getIfBlockLabel() {
-            return ifBlockLabels[numConditionalBlocks];
-        }
-
-        int nextElseBlockLabel() {
-            elseBlockLabels[getIfBlockLabel()] += 1;
-        }
 
         std::unordered_map<std::string, std::shared_ptr<LValue>> LVs;
         std::unordered_map<std::string, std::shared_ptr<Expression>> constExprs;
