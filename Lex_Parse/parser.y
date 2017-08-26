@@ -185,11 +185,13 @@ ProcedureDecl : PSignature SCOLONSY FORWARDSY SCOLONSY {
                 }
               | PSignature SCOLONSY PFBody [localConsts] {
                     //Mid-Rule local const declaration begin
-                    for(auto i: $localConsts ) {
-                        RSWCOMP::declareConst(i.first.first, i.first.second, std::make_shared<std::string>($1.fxSig.name));
+                    auto n = std::make_shared<std::string>($1.fxSig.name);
+                    for(auto i: $localConsts.first ) {
+                        RSWCOMP::declareConst(i.first, i.second, n);
                     }
-                    for(auto i: $localConsts) {
-                        RSWCOMP::MakeVar(i.second.first, i.second.second, std::make_shared<std::string>($1.fxSig.name));
+                    for(auto i: $localConsts.second ) {
+                        RSWCOMP::MakeId(i.second, n);
+                        RSWCOMP::MakeVar(i.first, n);
                     }
                 } SCOLONSY {
                     $1.isProcedure = true; $1.isFwdDeclaration = false;
@@ -206,8 +208,13 @@ FunctionDecl : FSignature SCOLONSY FORWARDSY SCOLONSY {
                 }
              | FSignature SCOLONSY PFBody [localConsts] {
                    //Mid-Rule local const declaration begin
-                   for(auto i: $localConsts ) {
-                       RSWCOMP::declareConst(i.first, i.second, std::make_shared<std::string>($1.fxSig.name));
+                   auto n = std::make_shared<std::string>($1.fxSig.name);
+                   for(auto i: $localConsts.first ) {
+                       RSWCOMP::declareConst(i.first, i.second, n);
+                   }
+                   for(auto i: $localConsts.second ) {
+                       RSWCOMP::MakeId(i.second, n);
+                       RSWCOMP::MakeVar(i.first, n);
                    }
                } SCOLONSY {
                     $1.isFwdDeclaration = false; $1.isProcedure = false;
@@ -264,7 +271,7 @@ PFOptVarDecls : VARSY PFVarDecls {$$ = $2;}
             ;
 
 PFVarDecls  : PFVarDecls PFVarDecl {
-                for(auto i : $3) {
+                for(auto i : $2) {
                     $$.push_back(i);
                 }
                 $$ = $1;
@@ -284,9 +291,7 @@ PFVarDecl : PFIdentList COLONSY Type SCOLONSY {
             }
         ;
 
-PFIdentList : PFIdentList COMMASY IDENTSY {
-                ($$.push_back($3); $$ = $1;
-            }
+PFIdentList : PFIdentList COMMASY IDENTSY {$$.push_back($3); $$ = $1;}
           | IDENTSY {$$.push_back($1);}
           ;
 
@@ -341,7 +346,7 @@ FieldDecls : FieldDecls FieldDecl {}
 
 FieldDecl : IdentList COLONSY Type SCOLONSY {}
           ;
-//TODO make function-friendly
+//done: make function-friendly
 IdentList : IdentList COMMASY IDENTSY {
                 RSWCOMP::MakeId($3, nullptr);
             }
@@ -358,7 +363,7 @@ OptVarDecls : VARSY VarDecls
 VarDecls    : VarDecls VarDecl
             | VarDecl
             ;
-//TODO make function-friendly
+//done: make function-friendly
 VarDecl : IdentList COLONSY Type SCOLONSY {RSWCOMP::MakeVar($3, nullptr);}
         ;
 
