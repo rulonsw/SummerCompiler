@@ -27,8 +27,8 @@ namespace RSWCOMP {
     const std::shared_ptr<Expression> IntExpr(int i);
     const std::shared_ptr<Expression> StringExpr(std::string s);
 
-    void MakeVar(Type t);
-    void MakeId(std::string s);
+    void MakeVar(Type t, std::shared_ptr<std::string> calledFrom);
+    void MakeId(std::string s, std::shared_ptr<std::string> calledFrom);
 
     const std::shared_ptr<Expression> ChrExpr(std::shared_ptr<Expression> expr);
     const std::shared_ptr<Expression> OrdExpr(std::shared_ptr<Expression> e);

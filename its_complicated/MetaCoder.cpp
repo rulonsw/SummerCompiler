@@ -284,13 +284,14 @@ namespace RSWCOMP {
         return std::make_shared<Expression>(s, StringType());
     }
 
-    //TODO: reform MakeId with scope sensitivity
-    void MakeId(std::string s) {
+    //done: reform MakeId with scope sensitivity
+    void MakeId(std::string s, std::shared_ptr<std::string> calledFrom) {
         auto curr = MetaCoder::curr();
+        if (calledFrom != nullptr) s = s.append(("_" + *calledFrom));
         curr->ids_toWrite.push_back(s);
     }
-    //TODO: reform MakeVar with scope sensitivity
-    void MakeVar(Type t) {
+    //done: reform MakeVar with scope sensitivity
+    void MakeVar(Type t, std::shared_ptr<std::string> calledFrom) {
         /*This method is essentially only called when there's 1+ things in the `ids_toWrite` vector.*/
         auto curr = MetaCoder::curr();
 
@@ -298,17 +299,22 @@ namespace RSWCOMP {
 
         while(curr->ids_toWrite.size() != 0) {
             auto foo = curr->ids_toWrite[0];
+
+            if(calledFrom != nullptr) foo = foo.append(("_" + *calledFrom));
+
             auto isFound = curr->LVs.find(foo);
             if (isFound != curr->LVs.end()) {
                 throw("Duplicate LValue idString found during compilation. Please retry using distinct var names for each variable.");
             }
             LValue lv;
 
-            lv.lvi = GLOBAL_REF;
+            lv.lvi = calledFrom == nullptr? GLOBAL_REF : STACK_REF;
             lv.idString = foo;
             lv.cpsl_refname = foo;
-            lv.globalOffset = curr->topOfGlobal(t.memBlkSize);
+            if (calledFrom == nullptr) lv.globalOffset = curr->topOfGlobal(t.memBlkSize);
+            else lv.stackOffset = curr->topOfStack(t.memBlkSize);
             lv.type = t;
+            if (calledFrom == nullptr) lv.isLocal = true;
             curr->LVs[foo] = std::make_shared<RSWCOMP::LValue>(lv);
 
             curr->ids_toWrite.erase(curr->ids_toWrite.begin());

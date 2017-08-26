@@ -110,7 +110,7 @@ class Driver;
 %type <int> Assignment
 %type <int> Block
 %type <int> Body
-%type <std::vector<std::pair<std::string, std::shared_ptr<RSWCOMP::Expression>>>> PFBody
+%type <std::pair<std::vector<std::pair<std::string, std::shared_ptr<RSWCOMP::Expression>>>, std::vector<std::pair<RSWCOMP::Type, std::string>> >> PFBody
 %type <int> ElseClause
 %type <int> ElseIfHead
 %type <int> ElseIfList
@@ -153,12 +153,14 @@ class Driver;
 %type <std::pair<std::string, std::shared_ptr<RSWCOMP::Expression>>> PFConstDecl
 %type <std::vector<std::pair<std::string, std::shared_ptr<RSWCOMP::Expression>>>> PFConstDecls
 %type <std::vector<std::pair<std::string, std::shared_ptr<RSWCOMP::Expression>>>> PFOptConstDecls
-
-
+%type <std::vector<std::pair<RSWCOMP::Type, std::string>>>PFVarDecl
+%type <std::vector<std::pair<RSWCOMP::Type, std::string>>>PFVarDecls
+%type <std::vector<std::pair<RSWCOMP::Type, std::string>>>PFOptVarDecls
 %%
+
 Program : ProgramHead Block DOTSY {RSWCOMP::MainBlock();}
 				;
-
+//TODO: Check for fwd-declared replacements for function prototypes
 ProgramHead : OptConstDecls OptTypeDecls OptVarDecls PFDecls
             ;
 OptConstDecls : CONSTSY ConstDecls
@@ -181,10 +183,13 @@ ProcedureDecl : PSignature SCOLONSY FORWARDSY SCOLONSY {
                     $1.isProcedure = true; $1.isFwdDeclaration = true;
                     $1.Declare($1.fxSig.name, $1);
                 }
-              | PSignature SCOLONSY PFBody[localConsts] {
+              | PSignature SCOLONSY PFBody [localConsts] {
                     //Mid-Rule local const declaration begin
                     for(auto i: $localConsts ) {
-                        RSWCOMP::declareConst(i.first, i.second, std::make_shared<std::string>($1.fxSig.name));
+                        RSWCOMP::declareConst(i.first.first, i.first.second, std::make_shared<std::string>($1.fxSig.name));
+                    }
+                    for(auto i: $localConsts) {
+                        RSWCOMP::MakeVar(i.second.first, i.second.second, std::make_shared<std::string>($1.fxSig.name));
                     }
                 } SCOLONSY {
                     $1.isProcedure = true; $1.isFwdDeclaration = false;
@@ -199,7 +204,7 @@ FunctionDecl : FSignature SCOLONSY FORWARDSY SCOLONSY {
                     $1.isFwdDeclaration= true; $1.isProcedure = false;
                     $1.Declare($1.fxSig.name, $1);
                 }
-             | FSignature SCOLONSY PFBody[localConsts] {
+             | FSignature SCOLONSY PFBody [localConsts] {
                    //Mid-Rule local const declaration begin
                    for(auto i: $localConsts ) {
                        RSWCOMP::declareConst(i.first, i.second, std::make_shared<std::string>($1.fxSig.name));
@@ -250,9 +255,41 @@ OptVar : VARSY {}
        | {}
        ;
 
+PFBody : PFOptConstDecls OptTypeDecls PFOptVarDecls Block {$$ = std::make_pair($1,$3);}
+       ;
 
-PFBody : PFOptConstDecls OptTypeDecls OptVarDecls Block { $$ = $1;}
+//TODO: May have to reform PFOptVarDecls to be a shared pointer in order to handle no var declarations.
+PFOptVarDecls : VARSY PFVarDecls {$$ = $2;}
+            |{}
+            ;
+
+PFVarDecls  : PFVarDecls PFVarDecl {
+                for(auto i : $3) {
+                    $$.push_back(i);
+                }
+                $$ = $1;
+            }
+            | PFVarDecl {
+                for(auto i : $1) {
+                    $$.push_back(i);
+                }
+            }
+            ;
+
+
+PFVarDecl : PFIdentList COLONSY Type SCOLONSY {
+                for(auto i : $1) {
+                    $$.push_back(std::make_pair($3, i));
+                }
+            }
         ;
+
+PFIdentList : PFIdentList COMMASY IDENTSY {
+                ($$.push_back($3); $$ = $1;
+            }
+          | IDENTSY {$$.push_back($1);}
+          ;
+
 PFOptConstDecls : CONSTSY PFConstDecls {$$ = $2;}
                 | {}
                 ;
@@ -304,11 +341,11 @@ FieldDecls : FieldDecls FieldDecl {}
 
 FieldDecl : IdentList COLONSY Type SCOLONSY {}
           ;
-
+//TODO make function-friendly
 IdentList : IdentList COMMASY IDENTSY {
-                RSWCOMP::MakeId($3);
+                RSWCOMP::MakeId($3, nullptr);
             }
-          | IDENTSY {RSWCOMP::MakeId($1);}
+          | IDENTSY {RSWCOMP::MakeId($1, nullptr);}
           ;
 
 ArrayType : ARRAYSY LBRACKETSY Expression COLONSY Expression RBRACKETSY OFSY Type {}
@@ -321,8 +358,8 @@ OptVarDecls : VARSY VarDecls
 VarDecls    : VarDecls VarDecl
             | VarDecl
             ;
-
-VarDecl : IdentList COLONSY Type SCOLONSY {RSWCOMP::MakeVar($3);}
+//TODO make function-friendly
+VarDecl : IdentList COLONSY Type SCOLONSY {RSWCOMP::MakeVar($3, nullptr);}
         ;
 
 Statement : Assignment {$$ = $1;}
