@@ -110,6 +110,7 @@ class Driver;
 %type <int> Assignment
 %type <int> Block
 %type <int> Body
+%type <std::vector<std::pair<std::string, std::shared_ptr<RSWCOMP::Expression>>>> PFBody
 %type <int> ElseClause
 %type <int> ElseIfHead
 %type <int> ElseIfList
@@ -149,8 +150,10 @@ class Driver;
 %type <std::shared_ptr<RSWCOMP::Expression>> WhileStatement
 %type <int> WriteArgs
 %type <int> WriteStatement
-%type <std::string> idString
-%type <std::string> stringString
+%type <std::pair<std::string, std::shared_ptr<RSWCOMP::Expression>>> PFConstDecl
+%type <std::vector<std::pair<std::string, std::shared_ptr<RSWCOMP::Expression>>>> PFConstDecls
+%type <std::vector<std::pair<std::string, std::shared_ptr<RSWCOMP::Expression>>>> PFOptConstDecls
+
 
 %%
 Program : ProgramHead Block DOTSY {RSWCOMP::MainBlock();}
@@ -166,7 +169,7 @@ ConstDecls : ConstDecls ConstDecl
 					 | ConstDecl {RSWCOMP::ConstBlock();}
 					 ;
 
-ConstDecl : IDENTSY EQSY Expression SCOLONSY {RSWCOMP::declareConst($1, $3);}
+ConstDecl : IDENTSY EQSY Expression SCOLONSY {RSWCOMP::declareConst($1, $3, nullptr);}
 					;
 
 PFDecls : PFDecls ProcedureDecl
@@ -178,7 +181,12 @@ ProcedureDecl : PSignature SCOLONSY FORWARDSY SCOLONSY {
                     $1.isProcedure = true; $1.isFwdDeclaration = true;
                     $1.Declare($1.fxSig.name, $1);
                 }
-              | PSignature SCOLONSY Body SCOLONSY {
+              | PSignature SCOLONSY PFBody[localConsts] {
+                    //Mid-Rule local const declaration begin
+                    for(auto i: $localConsts ) {
+                        RSWCOMP::declareConst(i.first, i.second, std::make_shared<std::string>($1.fxSig.name));
+                    }
+                } SCOLONSY {
                     $1.isProcedure = true; $1.isFwdDeclaration = false;
                     $1.Declare($1.fxSig.name, $1);
               }
@@ -191,7 +199,12 @@ FunctionDecl : FSignature SCOLONSY FORWARDSY SCOLONSY {
                     $1.isFwdDeclaration= true; $1.isProcedure = false;
                     $1.Declare($1.fxSig.name, $1);
                 }
-             | FSignature SCOLONSY Body SCOLONSY {
+             | FSignature SCOLONSY PFBody[localConsts] {
+                   //Mid-Rule local const declaration begin
+                   for(auto i: $localConsts ) {
+                       RSWCOMP::declareConst(i.first, i.second, std::make_shared<std::string>($1.fxSig.name));
+                   }
+               } SCOLONSY {
                     $1.isFwdDeclaration = false; $1.isProcedure = false;
                     $1.Declare($1.fxSig.name, $1);
                 }
@@ -238,6 +251,21 @@ OptVar : VARSY {}
        ;
 
 
+PFBody : PFOptConstDecls OptTypeDecls OptVarDecls Block { $$ = $1;}
+        ;
+PFOptConstDecls : CONSTSY PFConstDecls {$$ = $2;}
+                | {}
+                ;
+
+PFConstDecls : PFConstDecls PFConstDecl {$$.push_back($2); $$ = $1;}
+					 | PFConstDecl {$$.push_back($1);}
+					 ;
+
+PFConstDecl : IDENTSY EQSY Expression SCOLONSY {RSWCOMP::declareConst($1, $3, nullptr);
+                $$ = std::make_pair($1, $3);
+            }
+            ;
+
 Body : OptConstDecls OptTypeDecls OptVarDecls Block {}
      ;
 
@@ -278,7 +306,6 @@ FieldDecl : IdentList COLONSY Type SCOLONSY {}
           ;
 
 IdentList : IdentList COMMASY IDENTSY {
-                //TODO: reform MakeId with scope sensitivity
                 RSWCOMP::MakeId($3);
             }
           | IDENTSY {RSWCOMP::MakeId($1);}

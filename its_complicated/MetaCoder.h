@@ -40,7 +40,7 @@ namespace RSWCOMP {
     const std::shared_ptr<Expression> OrExpr(std::shared_ptr<Expression> e1, std::shared_ptr<Expression> e2);
     const std::shared_ptr<Expression> NotExpr(std::shared_ptr<Expression> e);
 
-    void declareConst(std::string id, std::shared_ptr<Expression> exp);
+    void declareConst(std::string id, std::shared_ptr<Expression> exp, std::shared_ptr<std::string> calledFrom);
     std::string ExpToConstData(std::shared_ptr<Expression> exp);
 
     void ReadValue(std::shared_ptr<LValue> lv);

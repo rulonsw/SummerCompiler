@@ -62,10 +62,10 @@ namespace RSWCOMP {
             RSWCOMP::MetaCoder::_content = std::make_shared<MetaCoder>();
             _content->intermediateBlock << ".globl main\n\nmain:\n";
 
-            declareConst("true", std::make_shared<Expression>(1, BooleanType()));
-            declareConst("TRUE", std::make_shared<Expression>(1, BooleanType()));
-            declareConst("false", std::make_shared<Expression>(0, BooleanType()));
-            declareConst("FALSE", std::make_shared<Expression>(0, BooleanType()));
+            declareConst("true", std::make_shared<Expression>(1, BooleanType()), nullptr);
+            declareConst("TRUE", std::make_shared<Expression>(1, BooleanType()), nullptr);
+            declareConst("false", std::make_shared<Expression>(0, BooleanType()), nullptr);
+            declareConst("FALSE", std::make_shared<Expression>(0, BooleanType()), nullptr);
             _content->dumpToMain();
         }
         return MetaCoder::_content;
@@ -73,7 +73,6 @@ namespace RSWCOMP {
 
     std::string MetaCoder::_outputFileName = "out.asm";
     MetaCoder::MetaCoder() {
-        std::cout << "Writing code to " << _outputFileName << "..." << std::endl;
         out.open(_outputFileName);
     }
     MetaCoder::~MetaCoder() {
@@ -285,10 +284,12 @@ namespace RSWCOMP {
         return std::make_shared<Expression>(s, StringType());
     }
 
+    //TODO: reform MakeId with scope sensitivity
     void MakeId(std::string s) {
         auto curr = MetaCoder::curr();
         curr->ids_toWrite.push_back(s);
     }
+    //TODO: reform MakeVar with scope sensitivity
     void MakeVar(Type t) {
         /*This method is essentially only called when there's 1+ things in the `ids_toWrite` vector.*/
         auto curr = MetaCoder::curr();
@@ -520,16 +521,16 @@ namespace RSWCOMP {
         curr->intermediateBlock << "\tsw " << gottenReg << "," << destMemLoc << "# This is the storage location of " << lv->idString << std::endl;
     }
 
-//TODO: Refactor declareConst to include an optional argument of type std::string that indicates the function that consts are being declared for
-    void declareConst(std::string cpsl_ref, std::shared_ptr<Expression> exp) {
+//DONE: Refactor declareConst to include an optional argument of type std::string that indicates the function that consts are being declared for
+    void declareConst(std::string cpsl_ref, std::shared_ptr<Expression> exp, std::shared_ptr<std::string> calledFrom) {
         auto curr = MetaCoder::curr();
         if (find(curr->ids_toWrite.begin(), curr->ids_toWrite.end(), cpsl_ref) != curr->ids_toWrite.end()) {
             throw "data with existing id " + cpsl_ref + " is already being used.";
         }
         LValue newLV;
         newLV.isLocal = !curr->getScope();
-        newLV.idString = cpsl_ref;
-        newLV.cpsl_refname = cpsl_ref;
+        newLV.idString = calledFrom == nullptr ? cpsl_ref : cpsl_ref + "_" + *calledFrom;
+        newLV.cpsl_refname = calledFrom == nullptr ? cpsl_ref : cpsl_ref + "_" + *calledFrom;
         newLV.type = exp->containedDataType();
 
         if (exp->containedDataType().t_name == T_STRING) {
@@ -537,10 +538,10 @@ namespace RSWCOMP {
         }
         else {
             newLV.lvi = CONST;
-            curr->intermediateBlock << "\t#id: "<< cpsl_ref << " loaded into consts" << std::endl;
+            curr->intermediateBlock << "\t#id: "<< cpsl_ref << " loaded into " << (calledFrom == nullptr ?  "" : "local ") << "consts" << std::endl;
         }
-        curr->constExprs[cpsl_ref] = exp;
-        curr->LVs[cpsl_ref] = std::make_shared<LValue>(newLV);
+        curr->constExprs[newLV.idString] = exp;
+        curr->LVs[newLV.idString] = std::make_shared<LValue>(newLV);
     }
 
     void ReadValue(std::shared_ptr<LValue> lv) {
@@ -558,7 +559,6 @@ namespace RSWCOMP {
 
         curr->intermediateBlock << "\tli $v0, " << MIPSReadType << "\n\tsyscall\n\tsw $v0," << destMemLoc << std::endl;
     }
-
     void WriteExpr(std::shared_ptr<Expression> exp) {
         auto curr = MetaCoder::curr();
         switch(exp->containedDataType().memBlkSize) {
@@ -580,7 +580,7 @@ namespace RSWCOMP {
                 std::string searchFor = exp->exprId;
                 if (searchFor == "UNSET_ID") {
                     exp->exprId = ExpToConstData(exp);
-                    declareConst(exp->exprId,std::make_shared<Expression>(exp->getStrVal(), StringType()));
+                    declareConst(exp->exprId,std::make_shared<Expression>(exp->getStrVal(), StringType()), nullptr);
                 }
                 std::shared_ptr<LValue> lvTemp = LVFromID(exp->exprId);
                 auto expRet = ExprFromLV(lvTemp);
