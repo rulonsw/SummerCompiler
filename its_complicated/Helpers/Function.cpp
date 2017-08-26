@@ -70,8 +70,8 @@ namespace RSWCOMP {
         auto found = curr->functions.find(name);
         if (found == curr->functions.end()) throw "Local variable loading error: function reference not found in MetaCoder record.";
 
+        auto retLV = LValue();
         if(!found->second->isProcedure) {
-            auto retLV = LValue();
             retLV.idString = "return";
             retLV.type = found->second->returnType;
             retLV.lvi = STACK_REF;
@@ -80,11 +80,17 @@ namespace RSWCOMP {
             curr->LVs["return"] = std::make_shared<LValue>(retLV);
         }
         if(args.numArgs != 0) {
+            int j = 0;
             for(auto i : args.argTypes) {
                 auto localLV = LValue();
-//                localLV.idString =
+                localLV.idString, localLV.cpsl_refname = args.argNames.at(j) + "_local";
+                localLV.type = i;
+                localLV.lvi = STACK_REF;
+                localLV.stackOffset = (i.memBlkSize * -1 ) + retLV.stackOffset; //stackOffset is already negative for retLV
+                localLV.isLocal = true;
+                curr->LVs[localLV.idString] = std::make_shared<LValue>(localLV);
+                j++;
             }
-
         }
 
     }

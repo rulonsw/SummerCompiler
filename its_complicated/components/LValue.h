@@ -23,8 +23,8 @@ namespace RSWCOMP {
         bool isLocal = false;
         LVInformation lvi;
         Type type;
-        int globalOffset;
-        int stackOffset;
+        int globalOffset=0;
+        int stackOffset=0;
         int constVal;
         std::string idString;
         std::string cpsl_refname;

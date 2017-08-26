@@ -208,7 +208,6 @@ FormalParameters : FormalParameters SCOLONSY FormalParameter {
                         $$ = $1;
                     }
                  ;
-//TODO: FormalParameter type needs to be changed to a std::pair
 FormalParameter : OptVar PFIdentList COLONSY Type {
                         for(auto i : $2) {
                             $$.first.push_back(i);
