@@ -52,8 +52,6 @@ namespace RSWCOMP {
 
     int MetaCoder::exitConditionalLayer() {
         auto ret = numConditionalBlocks;
-        numConditionalBlocks--;
-        elseBlockLabels.erase(ret);
         return ret;
     }
 

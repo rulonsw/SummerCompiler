@@ -465,7 +465,7 @@ Expression : CHARCONSTSY                         {$$ = RSWCOMP::CharExpr($1);}
            | Expression PLUSSY Expression        {$$ = RSWCOMP::AddExpr($1,$3);}
            | FunctionCall                        {}
            | INTSY                               {$$ = RSWCOMP::IntExpr($1);}
-           | LPARENSY Expression RPARENSY        {}
+           | LPARENSY Expression RPARENSY        {$$ = $2;}
            | LValue                              {$$ = RSWCOMP::ExprFromLV($1);}
            | MINUSSY Expression %prec UMINUSSY   {$$ = RSWCOMP::UnMinusExpr($2);}
            | NOTSY Expression                    {$$ = RSWCOMP::NotExpr($2);}
